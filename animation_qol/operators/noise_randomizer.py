@@ -34,7 +34,7 @@ class ANIMATIONQOL_OT_randomize_noise_modifiers(Operator):
             context.scene, "animation_qol_settings", None
         )
         if settings is None:
-            self.report({"ERROR"}, "Animation QoL settings missing on the scene.")
+            self.report({"ERROR"}, "YABQOLA settings missing on the scene.")
             return {"CANCELLED"}
 
         fcurves = gather_target_fcurves(

@@ -1,4 +1,4 @@
-"""Property definitions for the Animation QoL add-on."""
+"""Property definitions for the YABQOLA add-on."""
 
 from __future__ import annotations
 

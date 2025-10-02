@@ -1,10 +1,10 @@
 """
-Animation QoL Add-on Package
+YABQOLA — Yet Another Blender Quality of Life Add-on
 """
 
 bl_info = {
-    "name": "Animation QoL Toolkit",
-    "description": "Modular tools to streamline animation workflows with noise randomization, timing, quick flip, and cleanup utilities.",
+    "name": "YABQOLA: Yet Another Blender Quality of Life Add-on",
+    "description": "Modular animation QoL tools: noise randomizer, timing/stagger, quick flip, and scene cleanup.",
     "author": "Xnom3d",
     "version": (1, 2, 0),
     "blender": (3, 0, 0),

@@ -1,4 +1,4 @@
-"""UI panels for Animation QoL."""
+"""UI panels for YABQOLA (Yet Another Blender QoL Add-on)."""
 
 from __future__ import annotations
 
@@ -107,9 +107,9 @@ def _draw_cleanup_section(layout, settings: AnimationQOLSceneSettings):
 
 
 class ANIMATIONQOL_PT_base(Panel):
-    bl_label = "Animation QoL"
+    bl_label = "YABQOLA"
     bl_region_type = "UI"
-    bl_category = "Anim QOL"
+    bl_category = "YABQOLA"
 
     @classmethod
     def poll(cls, context: Context) -> bool:
@@ -139,10 +139,10 @@ class ANIMATIONQOL_PT_dopesheet(ANIMATIONQOL_PT_base):
 
 
 class ANIMATIONQOL_PT_view3d_quick_flip(Panel):
-    bl_label = "Animation QoL: Quick Flip"
+    bl_label = "YABQOLA: Quick Flip"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
-    bl_category = "Anim QOL"
+    bl_category = "YABQOLA"
 
     @classmethod
     def poll(cls, context: Context) -> bool:
@@ -160,10 +160,10 @@ class ANIMATIONQOL_PT_view3d_quick_flip(Panel):
 
 
 class ANIMATIONQOL_PT_view3d_cleanup(Panel):
-    bl_label = "Animation QoL: Scene Cleanup"
+    bl_label = "YABQOLA: Scene Cleanup"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
-    bl_category = "Anim QOL"
+    bl_category = "YABQOLA"
 
     @classmethod
     def poll(cls, context: Context) -> bool:

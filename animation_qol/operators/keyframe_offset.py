@@ -25,7 +25,7 @@ class ANIMATIONQOL_OT_offset_keyframes(Operator):
     )
     use_scene_settings: BoolProperty(
         name="Use Scene Settings",
-        description="Read the offset configuration from the Animation QoL panel",
+        description="Read the offset configuration from the YABQOLA panel",
         default=True,
         options={"SKIP_SAVE"},
     )
@@ -40,7 +40,7 @@ class ANIMATIONQOL_OT_offset_keyframes(Operator):
             context.scene, "animation_qol_settings", None
         )
         if settings is None:
-            self.report({"ERROR"}, "Animation QoL settings missing on the scene.")
+            self.report({"ERROR"}, "YABQOLA settings missing on the scene.")
             return {"CANCELLED"}
 
         if self.use_scene_settings:

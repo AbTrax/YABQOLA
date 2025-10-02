@@ -1,4 +1,4 @@
-"""Scene cleanup operators for Animation QoL."""
+"""Scene cleanup operators for YABQOLA."""
 
 from __future__ import annotations
 
@@ -85,7 +85,7 @@ class ANIMATIONQOL_OT_cleanup_invisible(Operator):
             context.scene, "animation_qol_settings", None
         )
         if settings is None:
-            self.report({"ERROR"}, "Animation QoL settings missing on the scene.")
+            self.report({"ERROR"}, "YABQOLA settings missing on the scene.")
             return {"CANCELLED"}
 
         candidates = _gather_cleanup_targets(context, settings)
@@ -110,7 +110,7 @@ class ANIMATIONQOL_OT_cleanup_invisible(Operator):
             context.scene, "animation_qol_settings", None
         )
         if settings is None:
-            self.report({"ERROR"}, "Animation QoL settings missing on the scene.")
+            self.report({"ERROR"}, "YABQOLA settings missing on the scene.")
             return {"CANCELLED"}
 
         candidates = _gather_cleanup_targets(context, settings)

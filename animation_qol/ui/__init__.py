@@ -1,1 +1,1 @@
-"""UI subpackage for Animation QoL."""
+"""UI subpackage for YABQOLA."""

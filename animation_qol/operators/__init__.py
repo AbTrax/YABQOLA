@@ -1,1 +1,1 @@
-"""Operator subpackage for Animation QoL."""
+"""Operator subpackage for YABQOLA."""

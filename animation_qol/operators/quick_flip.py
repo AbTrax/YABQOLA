@@ -37,7 +37,7 @@ class ANIMATIONQOL_OT_flip_smart(Operator):
             context.scene, "animation_qol_settings", None
         )
         if settings is None:
-            self.report({"ERROR"}, "Animation QoL settings missing on the scene.")
+            self.report({"ERROR"}, "YABQOLA settings missing on the scene.")
             return {"CANCELLED"}
 
         axis_index = _AXIS_TO_INDEX[settings.flip_axis]
@@ -76,7 +76,7 @@ class ANIMATIONQOL_OT_flip_pose_only(Operator):
             context.scene, "animation_qol_settings", None
         )
         if settings is None:
-            self.report({"ERROR"}, "Animation QoL settings missing on the scene.")
+            self.report({"ERROR"}, "YABQOLA settings missing on the scene.")
             return {"CANCELLED"}
 
         targets = _gather_targets(context, settings)
@@ -106,7 +106,7 @@ class ANIMATIONQOL_OT_flip_objects_only(Operator):
             context.scene, "animation_qol_settings", None
         )
         if settings is None:
-            self.report({"ERROR"}, "Animation QoL settings missing on the scene.")
+            self.report({"ERROR"}, "YABQOLA settings missing on the scene.")
             return {"CANCELLED"}
 
         axis_index = _AXIS_TO_INDEX[settings.flip_axis]

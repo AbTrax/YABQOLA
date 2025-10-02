@@ -1,4 +1,4 @@
-"""Object selection and transformation helpers for Animation QoL."""
+"""Object selection and transformation helpers for YABQOLA."""
 
 from __future__ import annotations
 

@@ -1,1 +1,1 @@
-"""Utility helpers for Animation QoL."""
+"""Utility helpers for YABQOLA (Yet Another Blender QoL Add-on)."""
