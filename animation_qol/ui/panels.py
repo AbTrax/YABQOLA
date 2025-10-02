@@ -8,6 +8,10 @@ from bpy.types import Context, Panel
 from ..properties import AnimationQOLSceneSettings
 
 
+def _get_settings(context: Context) -> AnimationQOLSceneSettings | None:
+    return getattr(context.scene, "animation_qol_settings", None)
+
+
 def _draw_noise_section(layout, settings: AnimationQOLSceneSettings):
     layout.label(text="Noise Randomizer", icon="RNDCURVE")
     col = layout.column(align=True)
@@ -58,6 +62,50 @@ def _draw_stagger_section(layout, settings: AnimationQOLSceneSettings):
     )
 
 
+def _draw_quick_flip_section(layout, settings: AnimationQOLSceneSettings):
+    layout.label(text="Quick Flip", icon="ARROW_LEFTRIGHT")
+    col = layout.column(align=True)
+    col.prop(settings, "flip_scope", expand=True)
+    if settings.flip_scope == "COLLECTION":
+        col.prop(settings, "flip_collection")
+        col.prop(settings, "flip_include_subcollections")
+    col.prop(settings, "flip_include_children")
+    col.separator()
+    col.prop(settings, "flip_axis", expand=True)
+    col.separator()
+    col.operator("animation_qol.flip_smart", icon="ARROW_LEFTRIGHT", text="Smart Flip")
+    row = col.row(align=True)
+    row.operator("animation_qol.flip_pose_only", icon="ARMATURE_DATA", text="Flip Pose")
+    row.operator("animation_qol.flip_objects_only", icon="EMPTY_ARROWS", text="Flip Objects")
+
+
+def _draw_cleanup_section(layout, settings: AnimationQOLSceneSettings):
+    layout.label(text="Scene Cleanup", icon="TRASH")
+    col = layout.column(align=True)
+    col.prop(settings, "cleanup_consider_viewport")
+    col.prop(settings, "cleanup_consider_render")
+    col.separator()
+    col.prop(settings, "cleanup_keep_lights")
+    row = col.row(align=True)
+    row.prop(settings, "cleanup_keep_cameras")
+    row.prop(settings, "cleanup_keep_active_camera")
+    col.prop(settings, "cleanup_exclude_linked_data")
+    col.separator()
+    row = col.row(align=True)
+    preview_op = row.operator(
+        "animation_qol.cleanup_invisible",
+        icon="HIDE_OFF",
+        text="Preview",
+    )
+    preview_op.dry_run = True
+    delete_op = row.operator(
+        "animation_qol.cleanup_invisible",
+        icon="TRASH",
+        text="Delete",
+    )
+    delete_op.dry_run = False
+
+
 class ANIMATIONQOL_PT_base(Panel):
     bl_label = "Animation QoL"
     bl_region_type = "UI"
@@ -65,13 +113,11 @@ class ANIMATIONQOL_PT_base(Panel):
 
     @classmethod
     def poll(cls, context: Context) -> bool:
-        return getattr(context.scene, "animation_qol_settings", None) is not None
+        return _get_settings(context) is not None
 
     def draw(self, context: Context):
         layout = self.layout
-        settings: AnimationQOLSceneSettings | None = getattr(
-            context.scene, "animation_qol_settings", None
-        )
+        settings = _get_settings(context)
 
         if settings is None:
             layout.label(text="Scene settings unavailable", icon="ERROR")
@@ -92,9 +138,53 @@ class ANIMATIONQOL_PT_dopesheet(ANIMATIONQOL_PT_base):
     bl_space_type = "DOPESHEET_EDITOR"
 
 
+class ANIMATIONQOL_PT_view3d_quick_flip(Panel):
+    bl_label = "Animation QoL: Quick Flip"
+    bl_space_type = "VIEW_3D"
+    bl_region_type = "UI"
+    bl_category = "Anim QOL"
+
+    @classmethod
+    def poll(cls, context: Context) -> bool:
+        return _get_settings(context) is not None
+
+    def draw(self, context: Context):
+        layout = self.layout
+        settings = _get_settings(context)
+
+        if settings is None:
+            layout.label(text="Scene settings unavailable", icon="ERROR")
+            return
+
+        _draw_quick_flip_section(layout.box(), settings)
+
+
+class ANIMATIONQOL_PT_view3d_cleanup(Panel):
+    bl_label = "Animation QoL: Scene Cleanup"
+    bl_space_type = "VIEW_3D"
+    bl_region_type = "UI"
+    bl_category = "Anim QOL"
+
+    @classmethod
+    def poll(cls, context: Context) -> bool:
+        return _get_settings(context) is not None
+
+    def draw(self, context: Context):
+        layout = self.layout
+        settings = _get_settings(context)
+
+        if settings is None:
+            layout.label(text="Scene settings unavailable", icon="ERROR")
+            return
+
+        _draw_cleanup_section(layout.box(), settings)
+
+
 CLASSES = (
     ANIMATIONQOL_PT_graph_editor,
     ANIMATIONQOL_PT_dopesheet,
+    ANIMATIONQOL_PT_view3d_quick_flip,
+    ANIMATIONQOL_PT_view3d_cleanup,
 )
 
 

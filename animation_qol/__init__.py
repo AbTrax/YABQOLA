@@ -4,11 +4,11 @@ Animation QoL Add-on Package
 
 bl_info = {
     "name": "Animation QoL Toolkit",
-    "description": "Modular tools to streamline animation workflows with noise randomization and timing utilities.",
+    "description": "Modular tools to streamline animation workflows with noise randomization, timing, quick flip, and cleanup utilities.",
     "author": "Xnom3d",
-    "version": (1, 0, 0),
+    "version": (1, 2, 0),
     "blender": (3, 0, 0),
-    "location": "Graph Editor > Sidebar",
+    "location": "Graph/Dope Sheet & 3D View > Sidebar",
     "warning": "",
     "doc_url": "",
     "category": "Animation",
@@ -17,7 +17,13 @@ bl_info = {
 import importlib
 
 from . import properties
-from .operators import keyframe_offset, noise_randomizer, stagger_timing
+from .operators import (
+    keyframe_offset,
+    noise_randomizer,
+    quick_flip,
+    scene_cleanup,
+    stagger_timing,
+)
 from .ui import panels
 
 MODULES = (
@@ -25,6 +31,8 @@ MODULES = (
     noise_randomizer,
     keyframe_offset,
     stagger_timing,
+    quick_flip,
+    scene_cleanup,
     panels,
 )
 

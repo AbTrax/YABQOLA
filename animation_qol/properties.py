@@ -3,13 +3,20 @@
 from __future__ import annotations
 
 import bpy
-from bpy.props import BoolProperty, FloatProperty, IntProperty, PointerProperty
+from bpy.props import (
+    BoolProperty,
+    EnumProperty,
+    FloatProperty,
+    IntProperty,
+    PointerProperty,
+)
 from bpy.types import PropertyGroup, Scene
 
 
 class AnimationQOLSceneSettings(PropertyGroup):
     """Persistent settings exposed in the UI panels."""
 
+    # Noise randomizer configuration
     noise_seed: IntProperty(
         name="Seed",
         description="Seed for random operations (0 uses system entropy)",
@@ -78,6 +85,7 @@ class AnimationQOLSceneSettings(PropertyGroup):
         default=True,
     )
 
+    # Keyframe offset configuration
     keyframe_frame_offset: IntProperty(
         name="Frame Offset",
         description="Number of frames to shift keyframes by",
@@ -92,6 +100,7 @@ class AnimationQOLSceneSettings(PropertyGroup):
         default=True,
     )
 
+    # Stagger timing configuration
     stagger_step: IntProperty(
         name="Step",
         description="Frame offset increment per object when staggering",
@@ -113,6 +122,74 @@ class AnimationQOLSceneSettings(PropertyGroup):
     stagger_include_shape_keys: BoolProperty(
         name="Shape Keys",
         description="Include shape key animations in the stagger operation",
+        default=True,
+    )
+
+    # Quick flip configuration
+    flip_scope: EnumProperty(
+        name="Scope",
+        description="Choose which objects are targeted for flip operations",
+        items=(
+            ("SELECTION", "Selection", "Use currently selected objects"),
+            ("COLLECTION", "Collection", "Use objects from a collection"),
+        ),
+        default="SELECTION",
+    )
+    flip_collection: PointerProperty(
+        name="Collection",
+        description="Collection whose contents will be affected when scope is Collection",
+        type=bpy.types.Collection,
+    )
+    flip_include_subcollections: BoolProperty(
+        name="Include Sub-collections",
+        description="Also include objects from child collections",
+        default=True,
+    )
+    flip_include_children: BoolProperty(
+        name="Include Hierarchy",
+        description="Include hierarchy children of targeted objects",
+        default=False,
+    )
+    flip_axis: EnumProperty(
+        name="Axis",
+        description="Axis used when mirroring object scale",
+        items=(
+            ("X", "X", "Mirror across the X axis"),
+            ("Y", "Y", "Mirror across the Y axis"),
+            ("Z", "Z", "Mirror across the Z axis"),
+        ),
+        default="X",
+    )
+
+    # Scene cleanup configuration
+    cleanup_consider_viewport: BoolProperty(
+        name="Consider Viewport Visibility",
+        description="Treat objects hidden from the viewport as invisible",
+        default=True,
+    )
+    cleanup_consider_render: BoolProperty(
+        name="Consider Render Visibility",
+        description="Treat objects disabled for rendering as invisible",
+        default=True,
+    )
+    cleanup_keep_lights: BoolProperty(
+        name="Keep Lights",
+        description="Never remove lights or light probes",
+        default=True,
+    )
+    cleanup_keep_cameras: BoolProperty(
+        name="Keep Cameras",
+        description="Never remove camera objects",
+        default=True,
+    )
+    cleanup_keep_active_camera: BoolProperty(
+        name="Always Keep Active Camera",
+        description="Ensure the scene's active camera is preserved even if cameras are deletable",
+        default=True,
+    )
+    cleanup_exclude_linked_data: BoolProperty(
+        name="Skip Linked Data",
+        description="Ignore objects that come from external libraries",
         default=True,
     )
 
