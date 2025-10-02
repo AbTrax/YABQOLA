@@ -1,0 +1,96 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: "Tag name to create or update (e.g. v1.2.0)"
+        required: true
+        type: string
+      release_name:
+        description: "Release title (defaults to YABQOLA <version>)"
+        required: false
+        type: string
+      draft:
+        description: "Create the release as a draft"
+        required: false
+        default: false
+        type: boolean
+      prerelease:
+        description: "Mark the release as a prerelease"
+        required: false
+        default: false
+        type: boolean
+      target_commitish:
+        description: "Commit SHA or ref to tag when running manually"
+        required: false
+        default: main
+        type: string
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Package add-on
+        run: python scripts/package_addon.py --force
+
+      - name: Upload package artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: yabqola-package
+          path: dist/*.zip
+
+      - name: Determine release metadata
+        id: meta
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            TAG="${{ github.event.inputs.tag_name }}"
+            if [ -z "$TAG" ]; then
+              echo "Manual runs require the tag_name input" >&2
+              exit 1
+            fi
+            NAME="${{ github.event.inputs.release_name }}"
+            if [ -z "$NAME" ]; then
+              NAME="YABQOLA ${TAG#v}"
+            fi
+            TARGET="${{ github.event.inputs.target_commitish }}"
+            if [ -z "$TARGET" ]; then
+              TARGET="main"
+            fi
+          else
+            TAG="${GITHUB_REF#refs/tags/}"
+            NAME="YABQOLA ${TAG#v}"
+            TARGET="${GITHUB_SHA}"
+          fi
+
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "name=$NAME" >> "$GITHUB_OUTPUT"
+          echo "target=$TARGET" >> "$GITHUB_OUTPUT"
+
+      - name: Create or update GitHub release
+        uses: ncipollo/release-action@v1
+        with:
+          tag: ${{ steps.meta.outputs.tag }}
+          name: ${{ steps.meta.outputs.name }}
+          artifacts: dist/*.zip
+          draft: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.draft || false }}
+          prerelease: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.prerelease || false }}
+          allowUpdates: true
+          makeLatest: true
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit: ${{ steps.meta.outputs.target }}

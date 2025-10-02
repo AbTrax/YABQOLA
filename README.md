@@ -123,6 +123,24 @@ Bug reports, UX feedback, and documentation updates are equally welcome.
 
 ---
 
+## Automated Releases
+
+This project includes a packaging helper and GitHub Actions workflow to publish release zips automatically.
+
+### Local packaging
+
+- Run `python scripts/package_addon.py --force` to create `dist/YABQOLA-<version>.zip` using the `bl_info` version.
+- Use `--suffix` to append build metadata (for example `--suffix nightly`).
+
+### GitHub Actions
+
+- Pushing a tag that starts with `v` (for example `v1.2.0`) triggers the **Release** workflow, builds the zip, and publishes a GitHub Release with the artifact attached.
+- You can also start the workflow manually from the Actions tab. Provide the release tag (e.g. `v1.2.0`) and optionally mark it as a draft or prerelease. The workflow will tag the commit you select and attach the packaged zip automatically.
+
+Artifacts from any run are uploaded as workflow artifacts so they can be downloaded without publishing the release.
+
+---
+
 ## Support & Issues
 
 - File bugs and feature requests via the repository issue tracker.
