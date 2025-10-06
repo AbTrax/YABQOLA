@@ -1,6 +1,6 @@
 # YABQOLA — Yet Another Blender Quality of Life Add-on
 
-**Version:** 1.2.0 · **Blender Compatibility:** 3.0+
+**Version:** 1.2.1 · **Blender Compatibility:** 3.0+
 
 YABQOLA is a modular collection of animation utilities for Blender created by **Xnom3d**. It focuses on speeding up common cleanup and timing tasks so you can stay in the flow while animating. Install it once and access every tool from the **Graph Editor**, **Dope Sheet**, or **3D Viewport** sidebars under the **YABQOLA** tab.
 
@@ -18,6 +18,7 @@ YABQOLA is a modular collection of animation utilities for Blender created by **
 - **Keyframe Offset**
   - Shift keyframes forward or backward by any number of frames.
   - Target only selected keys or entire F-Curves.
+  - Cascade offsets by selection order or alphabetical channel names.
 
 - **Stagger Timing**
   - Cascading offsets across multiple objects to create natural overlap.
@@ -73,6 +74,7 @@ Each feature lives in its own collapsible panel so you can focus on the tools yo
 ### Keyframe Offset
 
 - Choose a **Frame Offset** and whether to affect only selected keys.
+- Pick an **Offset Mode**: Uniform, Selection Order, or Name.
 - Run **Apply Offset** to nudge timing as a batch operation.
 - Great for quick re-timing without diving into individual curves.
 
@@ -99,6 +101,12 @@ Each feature lives in its own collapsible panel so you can focus on the tools yo
 - Use **Preview** (dry run) to review candidates, then **Delete** to clean.
 
 ---
+
+## Release Notes
+
+### 1.2.1
+
+- Added selection order and name-based cascade options to the Keyframe Offset tool.
 
 ## Roadmap & Feedback
 
@@ -134,8 +142,8 @@ This project includes a packaging helper and GitHub Actions workflow to publish 
 
 ### GitHub Actions
 
-- Pushing a tag that starts with `v` (for example `v1.2.0`) triggers the **Release** workflow, builds the zip, and publishes a GitHub Release with the artifact attached.
-- You can also start the workflow manually from the Actions tab. Provide the release tag (e.g. `v1.2.0`) and optionally mark it as a draft or prerelease. The workflow will tag the commit you select and attach the packaged zip automatically.
+- Pushing a tag that starts with `v` (for example `v1.2.1`) triggers the **Release** workflow, builds the zip, and publishes a GitHub Release with the artifact attached.
+- You can also start the workflow manually from the Actions tab. Provide the release tag (e.g. `v1.2.1`) and optionally mark it as a draft or prerelease. The workflow will tag the commit you select and attach the packaged zip automatically.
 
 Artifacts from any run are uploaded as workflow artifacts so they can be downloaded without publishing the release.
 

@@ -100,6 +100,17 @@ class AnimationQOLSceneSettings(PropertyGroup):
         default=True,
     )
 
+    keyframe_offset_mode: EnumProperty(
+        name="Offset Mode",
+        description="Choose how offsets are distributed across the targeted curves",
+        items=(
+            ("UNIFORM", "Uniform", "Shift every targeted keyframe by the same amount"),
+            ("ORDER", "Selection Order", "Offset incrementally following the current curve order"),
+            ("NAME", "Name", "Offset incrementally based on curve names"),
+        ),
+        default="UNIFORM",
+    )
+
     # Stagger timing configuration
     stagger_step: IntProperty(
         name="Step",

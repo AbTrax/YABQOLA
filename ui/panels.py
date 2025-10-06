@@ -41,6 +41,7 @@ def _draw_offset_section(layout, settings: AnimationQOLSceneSettings):
     col = layout.column(align=True)
     col.prop(settings, "keyframe_frame_offset")
     col.prop(settings, "keyframe_only_selected_keys")
+    col.prop(settings, "keyframe_offset_mode")
     col.operator(
         "animation_qol.offset_keyframes",
         icon="FRAME_NEXT",
