@@ -32,6 +32,22 @@ YABQOLA is a modular collection of animation utilities for Blender created by **
   - Identifies and removes invisible or unused objects.
   - Dry-run preview before deletion, with safeguards for cameras, lights, and linked data.
 
+- **Still Render Presets**
+  - One-click Cycles and Eevee presets tuned for clay previews, draft stills, and final hero frames.
+  - Keeps motion blur, sampling, and output formats in sync across render engines.
+
+- **Quick Snap**
+  - Captures timestamped stills to a dedicated folder with optional camera overrides.
+  - Respects render presets or custom resolution overrides for consistent look-dev snapshots.
+
+- **Physics Dropper**
+  - Drops selected objects straight to the nearest surface using ray-cast collisions.
+  - Optional surface normal alignment keeps props flush with the ground on contact.
+
+- **Auto Blink**
+  - Generates natural blink patterns on shape keys across a chosen frame range.
+  - Supports random timing, adjustable durations, and per-scene seed control.
+
 ---
 
 ## Installation
@@ -99,6 +115,26 @@ Each feature lives in its own collapsible panel so you can focus on the tools yo
 - Decide whether viewport/render visibility should count as "visible".
 - Protect lights, cameras, and linked data with the provided toggles.
 - Use **Preview** (dry run) to review candidates, then **Delete** to clean.
+
+### Still Render Presets
+
+- Pick from clay, draft, or final still presets tuned for both Cycles and Eevee.
+- Apply output, sampling, and motion blur overrides in one click via the sidebar or add-on preferences.
+
+### Quick Snap
+
+- Configure a snap directory, filename prefix, and timestamp/frame options for rapid look-dev captures.
+- Optionally override resolution or camera and reuse the active render preset before triggering **Quick Snap**.
+
+### Physics Dropper
+
+- Select objects and click **Drop to Surface** to ray cast each item onto nearby collision geometry.
+- Provide a collision collection, offsets, and normal alignment to control how props settle on contact.
+
+### Auto Blink
+
+- Target any shape key (defaulting to `Blink`) and specify close, hold, and open timings.
+- Blend between deterministic intervals and seeded randomness to create natural blinking cycles across a frame range.
 
 ---
 

@@ -1,5 +1,5 @@
 """
-YABQOLA — Yet Another Blender Quality of Life Add-on
+YABQOLA - Yet Another Blender Quality of Life Add-on
 """
 
 bl_info = {
@@ -16,22 +16,37 @@ bl_info = {
 
 import importlib
 
-from . import properties
+import bpy
+
+from . import preferences, properties
 from .operators import (
+    auto_blink,
+    ease_presets,
     keyframe_offset,
+    motion_hold,
     noise_randomizer,
+    physics_dropper,
     quick_flip,
+    quick_snap,
+    render_presets,
     scene_cleanup,
     stagger_timing,
 )
 from .ui import panels
 
 MODULES = (
+    preferences,
     properties,
     noise_randomizer,
     keyframe_offset,
     stagger_timing,
+    ease_presets,
+    motion_hold,
+    auto_blink,
     quick_flip,
+    physics_dropper,
+    quick_snap,
+    render_presets,
     scene_cleanup,
     panels,
 )
@@ -42,8 +57,10 @@ def register():
         importlib.reload(module)
     for module in MODULES:
         module.register()
+    preferences.refresh_keymaps(bpy.context)
 
 
 def unregister():
+    preferences.clear_keymaps()
     for module in reversed(MODULES):
         module.unregister()

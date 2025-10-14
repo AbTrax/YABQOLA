@@ -63,6 +63,61 @@ def _draw_stagger_section(layout, settings: AnimationQOLSceneSettings):
     )
 
 
+def _draw_ease_section(layout, settings: AnimationQOLSceneSettings):
+    layout.label(text="Ease Presets", icon="IPO_BEZIER")
+    col = layout.column(align=True)
+    col.prop(settings, "ease_preset")
+    col.prop(settings, "ease_only_selected_curves")
+    col.prop(settings, "ease_only_selected_keys")
+    col.prop(settings, "ease_include_shape_keys")
+    col.prop(settings, "ease_affect_handles")
+    col.operator(
+        "animation_qol.apply_ease_preset",
+        icon="HANDLE_AUTO",
+        text="Apply Ease",
+    )
+
+
+def _draw_hold_section(layout, settings: AnimationQOLSceneSettings):
+    layout.label(text="Motion Hold", icon="PAUSE")
+    col = layout.column(align=True)
+    col.prop(settings, "hold_frame_count")
+    col.prop(settings, "hold_interpolation")
+    col.prop(settings, "hold_only_selected_curves")
+    col.prop(settings, "hold_only_selected_keys")
+    col.prop(settings, "hold_include_shape_keys")
+    col.prop(settings, "hold_inherit_handles")
+    col.operator(
+        "animation_qol.insert_motion_hold",
+        icon="KEY_HLT",
+        text="Insert Hold",
+    )
+
+
+def _draw_blink_section(layout, settings: AnimationQOLSceneSettings):
+    layout.label(text="Auto Blink", icon="HIDE_OFF")
+    col = layout.column(align=True)
+    col.prop(settings, "blink_shape_key_name")
+    col.prop(settings, "blink_strength", slider=True)
+    col.prop(settings, "blink_use_selected_objects")
+    row = col.row(align=True)
+    row.prop(settings, "blink_frame_start")
+    row.prop(settings, "blink_frame_end")
+    row = col.row(align=True)
+    row.prop(settings, "blink_interval")
+    row.prop(settings, "blink_interval_random")
+    row = col.row(align=True)
+    row.prop(settings, "blink_close_frames")
+    row.prop(settings, "blink_open_frames")
+    col.prop(settings, "blink_hold_frames")
+    col.prop(settings, "blink_seed")
+    col.operator(
+        "animation_qol.generate_auto_blinks",
+        icon="HIDE_OFF",
+        text="Generate Blinks",
+    )
+
+
 def _draw_quick_flip_section(layout, settings: AnimationQOLSceneSettings):
     layout.label(text="Quick Flip", icon="ARROW_LEFTRIGHT")
     col = layout.column(align=True)
@@ -107,6 +162,57 @@ def _draw_cleanup_section(layout, settings: AnimationQOLSceneSettings):
     delete_op.dry_run = False
 
 
+def _draw_render_section(layout, settings: AnimationQOLSceneSettings):
+    layout.label(text="Render Presets", icon="RENDER_STILL")
+    col = layout.column(align=True)
+    col.prop(settings, "render_preset")
+    col.prop(settings, "render_adjust_output")
+    col.prop(settings, "render_adjust_samples")
+    col.operator(
+        "animation_qol.apply_render_preset",
+        icon="RENDER_ANIMATION",
+        text="Apply Render Preset",
+    )
+
+
+def _draw_quick_snap_section(layout, settings: AnimationQOLSceneSettings):
+    layout.label(text="Quick Snap", icon="RENDER_STILL")
+    col = layout.column(align=True)
+    col.prop(settings, "quick_snap_use_preset")
+    col.prop(settings, "quick_snap_use_custom_resolution")
+    if settings.quick_snap_use_custom_resolution:
+        col.prop(settings, "quick_snap_resolution_percentage", slider=True)
+    col.prop(settings, "quick_snap_directory")
+    col.prop(settings, "quick_snap_filename_prefix")
+    row = col.row(align=True)
+    row.prop(settings, "quick_snap_append_frame")
+    row.prop(settings, "quick_snap_append_timestamp")
+    col.prop(settings, "quick_snap_camera")
+    col.prop(settings, "quick_snap_apply_stamp")
+    col.operator(
+        "animation_qol.quick_snap",
+        icon="RENDER_STILL",
+        text="Render Quick Snap",
+    )
+
+
+def _draw_dropper_section(layout, settings: AnimationQOLSceneSettings):
+    layout.label(text="Physics Dropper", icon="PHYSICS")
+    col = layout.column(align=True)
+    col.prop(settings, "drop_collision_collection")
+    col.prop(settings, "drop_include_subcollections")
+    row = col.row(align=True)
+    row.prop(settings, "drop_max_distance")
+    row.prop(settings, "drop_ray_offset")
+    col.prop(settings, "drop_contact_offset")
+    col.prop(settings, "drop_align_rotation")
+    col.operator(
+        "animation_qol.drop_to_surface",
+        icon="OUTLINER_OB_PHYSICS",
+        text="Drop to Surface",
+    )
+
+
 class ANIMATIONQOL_PT_base(Panel):
     bl_label = "YABQOLA"
     bl_region_type = "UI"
@@ -129,6 +235,12 @@ class ANIMATIONQOL_PT_base(Panel):
         _draw_offset_section(layout.box(), settings)
         layout.separator()
         _draw_stagger_section(layout.box(), settings)
+        layout.separator()
+        _draw_ease_section(layout.box(), settings)
+        layout.separator()
+        _draw_hold_section(layout.box(), settings)
+        layout.separator()
+        _draw_blink_section(layout.box(), settings)
 
 
 class ANIMATIONQOL_PT_graph_editor(ANIMATIONQOL_PT_base):
@@ -181,11 +293,57 @@ class ANIMATIONQOL_PT_view3d_cleanup(Panel):
         _draw_cleanup_section(layout.box(), settings)
 
 
+class ANIMATIONQOL_PT_view3d_dropper(Panel):
+    bl_label = "YABQOLA: Physics Dropper"
+    bl_space_type = "VIEW_3D"
+    bl_region_type = "UI"
+    bl_category = "YABQOLA"
+
+    @classmethod
+    def poll(cls, context: Context) -> bool:
+        return _get_settings(context) is not None
+
+    def draw(self, context: Context):
+        layout = self.layout
+        settings = _get_settings(context)
+
+        if settings is None:
+            layout.label(text="Scene settings unavailable", icon="ERROR")
+            return
+
+        _draw_dropper_section(layout.box(), settings)
+
+
+class ANIMATIONQOL_PT_view3d_render(Panel):
+    bl_label = "YABQOLA: Render Presets"
+    bl_space_type = "VIEW_3D"
+    bl_region_type = "UI"
+    bl_category = "YABQOLA"
+
+    @classmethod
+    def poll(cls, context: Context) -> bool:
+        return _get_settings(context) is not None
+
+    def draw(self, context: Context):
+        layout = self.layout
+        settings = _get_settings(context)
+
+        if settings is None:
+            layout.label(text="Scene settings unavailable", icon="ERROR")
+            return
+
+        _draw_render_section(layout.box(), settings)
+        layout.separator()
+        _draw_quick_snap_section(layout.box(), settings)
+
+
 CLASSES = (
     ANIMATIONQOL_PT_graph_editor,
     ANIMATIONQOL_PT_dopesheet,
     ANIMATIONQOL_PT_view3d_quick_flip,
     ANIMATIONQOL_PT_view3d_cleanup,
+    ANIMATIONQOL_PT_view3d_dropper,
+    ANIMATIONQOL_PT_view3d_render,
 )
 
 

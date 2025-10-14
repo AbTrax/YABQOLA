@@ -9,8 +9,13 @@ from bpy.props import (
     FloatProperty,
     IntProperty,
     PointerProperty,
+    StringProperty,
 )
-from bpy.types import PropertyGroup, Scene
+from bpy.types import Object, PropertyGroup, Scene
+
+
+def _camera_poll(_self, obj: Object | None) -> bool:
+    return obj is None or getattr(obj, "type", "") == "CAMERA"
 
 
 class AnimationQOLSceneSettings(PropertyGroup):
@@ -134,6 +139,263 @@ class AnimationQOLSceneSettings(PropertyGroup):
         name="Shape Keys",
         description="Include shape key animations in the stagger operation",
         default=True,
+    )
+
+    # Ease preset configuration
+    ease_preset: EnumProperty(
+        name="Preset",
+        description="Interpolation/handle preset to apply to targeted keyframes",
+        items=(
+            ("EASE_IN", "Ease In", "Ease into the motion by slowing at the beginning"),
+            ("EASE_OUT", "Ease Out", "Ease out of the motion by slowing at the end"),
+            ("EASE_IN_OUT", "Ease In-Out", "Ease at both the beginning and end"),
+            ("LINEAR", "Linear", "Straight interpolation between keys"),
+            ("CONSTANT", "Constant", "Hold the value until the next keyframe"),
+        ),
+        default="EASE_IN_OUT",
+    )
+    ease_only_selected_curves: BoolProperty(
+        name="Only Selected Curves",
+        description="Limit easing operations to explicitly selected curves",
+        default=True,
+    )
+    ease_only_selected_keys: BoolProperty(
+        name="Only Selected Keys",
+        description="Only affect selected keyframes when applying the preset",
+        default=True,
+    )
+    ease_include_shape_keys: BoolProperty(
+        name="Include Shape Key Curves",
+        description="Also affect shape key animations when gathering curves",
+        default=True,
+    )
+    ease_affect_handles: BoolProperty(
+        name="Adjust Handles",
+        description="Update bezier handles alongside interpolation mode when applicable",
+        default=True,
+    )
+
+    # Motion hold configuration
+    hold_frame_count: IntProperty(
+        name="Hold Length",
+        description="Number of frames between the duplicated keys",
+        default=6,
+        min=1,
+        soft_max=120,
+        step=1,
+    )
+    hold_only_selected_curves: BoolProperty(
+        name="Only Selected Curves",
+        description="Only duplicate keys on selected curves",
+        default=True,
+    )
+    hold_only_selected_keys: BoolProperty(
+        name="Only Selected Keys",
+        description="Only duplicate keys that are explicitly selected",
+        default=True,
+    )
+    hold_include_shape_keys: BoolProperty(
+        name="Include Shape Key Curves",
+        description="Also process shape key animation curves",
+        default=True,
+    )
+    hold_interpolation: EnumProperty(
+        name="Hold Interpolation",
+        description="Interpolation mode used for the duplicated hold keys",
+        items=(
+            ("CONSTANT", "Constant", "Maintain a stepped hold between keys"),
+            ("LINEAR", "Linear", "Create a linear transition across the hold"),
+            ("BEZIER", "Bezier", "Use bezier interpolation for the hold"),
+        ),
+        default="CONSTANT",
+    )
+    hold_inherit_handles: BoolProperty(
+        name="Inherit Handles",
+        description="Attempt to preserve outgoing handle shape when duplicating bezier keys",
+        default=True,
+    )
+
+    # Render preset configuration
+    render_preset: EnumProperty(
+        name="Render Preset",
+        description="Quick toggle for commonly used render configurations",
+        items=(
+            ("PREVIEW", "Preview", "Low-cost preview settings"),
+            ("PLAYBLAST", "Playblast", "Balanced viewport capture settings"),
+            ("STILL_DRAFT", "Still Draft", "Medium-quality still render with quick turnaround"),
+            ("STILL_FINAL", "Still Final", "High-quality still render settings"),
+            ("STILL_CLAY", "Still Clay", "Simplified clay render for lighting checks"),
+            ("FINAL", "Final", "Legacy high-quality animation render settings"),
+        ),
+        default="PREVIEW",
+    )
+    render_adjust_output: BoolProperty(
+        name="Adjust Output Settings",
+        description="Update resolution, file format, and motion blur according to the preset",
+        default=True,
+    )
+    render_adjust_samples: BoolProperty(
+        name="Adjust Samples",
+        description="Update render engine sample counts according to the preset",
+        default=True,
+    )
+
+    # Quick snap configuration
+    quick_snap_use_preset: BoolProperty(
+        name="Apply Render Preset",
+        description="Apply the selected render preset before capturing the quick snap",
+        default=True,
+    )
+    quick_snap_use_custom_resolution: BoolProperty(
+        name="Override Resolution",
+        description="Render the quick snap at a specific resolution percentage",
+        default=False,
+    )
+    quick_snap_resolution_percentage: IntProperty(
+        name="Resolution %",
+        description="Resolution percentage override applied during the quick snap",
+        default=100,
+        min=1,
+        max=300,
+    )
+    quick_snap_directory: StringProperty(
+        name="Output Directory",
+        description="Directory used to store quick snap renders (falls back to //quick_snaps)",
+        subtype="DIR_PATH",
+    )
+    quick_snap_filename_prefix: StringProperty(
+        name="Filename Prefix",
+        description="Filename prefix used for quick snaps",
+        default="snap",
+    )
+    quick_snap_append_timestamp: BoolProperty(
+        name="Append Timestamp",
+        description="Append a timestamp to the filename to avoid overwriting previous snaps",
+        default=True,
+    )
+    quick_snap_append_frame: BoolProperty(
+        name="Append Frame",
+        description="Append the current frame number to the filename",
+        default=True,
+    )
+    quick_snap_camera: PointerProperty(
+        name="Camera Override",
+        description="Optional camera to use for quick snap renders (defaults to the scene camera)",
+        type=bpy.types.Object,
+        poll=_camera_poll,
+    )
+    quick_snap_apply_stamp: BoolProperty(
+        name="Use Stamp",
+        description="Enable the render stamp (if configured) for quick snap renders",
+        default=False,
+    )
+
+    # Physics dropper configuration
+    drop_collision_collection: PointerProperty(
+        name="Collision Collection",
+        description="Optional collection containing geometry used as ground collision",
+        type=bpy.types.Collection,
+    )
+    drop_include_subcollections: BoolProperty(
+        name="Include Sub-collections",
+        description="Use objects from child collections when a collision collection is provided",
+        default=True,
+    )
+    drop_max_distance: FloatProperty(
+        name="Max Drop Distance",
+        description="Maximum distance to search for ground geometry below each object",
+        default=100.0,
+        min=0.01,
+        soft_max=500.0,
+    )
+    drop_contact_offset: FloatProperty(
+        name="Contact Offset",
+        description="Gap left between the object and the detected ground surface",
+        default=0.0,
+        min=0.0,
+        max=1.0,
+        step=0.01,
+    )
+    drop_ray_offset: FloatProperty(
+        name="Ray Start Offset",
+        description="Height added above the object's bounds before casting the drop ray",
+        default=0.5,
+        min=0.0,
+        max=10.0,
+        step=0.1,
+    )
+    drop_align_rotation: BoolProperty(
+        name="Align to Surface",
+        description="Align each object's local Z axis to the hit surface normal after dropping",
+        default=False,
+    )
+
+    # Auto blink configuration
+    blink_shape_key_name: StringProperty(
+        name="Shape Key",
+        description="Name of the shape key used for blinking",
+        default="Blink",
+    )
+    blink_strength: FloatProperty(
+        name="Strength",
+        description="Maximum value applied to the blink shape key",
+        default=1.0,
+        min=0.0,
+        max=2.0,
+    )
+    blink_use_selected_objects: BoolProperty(
+        name="Selected Objects Only",
+        description="Generate blinks only for selected objects",
+        default=True,
+    )
+    blink_frame_start: IntProperty(
+        name="Start Frame",
+        description="Start frame for blink generation",
+        default=1,
+    )
+    blink_frame_end: IntProperty(
+        name="End Frame",
+        description="End frame for blink generation (inclusive)",
+        default=120,
+    )
+    blink_interval: IntProperty(
+        name="Base Interval",
+        description="Base number of frames between blinks",
+        default=120,
+        min=2,
+    )
+    blink_interval_random: IntProperty(
+        name="Interval Randomness",
+        description="Maximum random variation (positive or negative) added to each interval",
+        default=12,
+        min=0,
+    )
+    blink_close_frames: IntProperty(
+        name="Close Frames",
+        description="Number of frames used to close the eyelids",
+        default=2,
+        min=1,
+        max=12,
+    )
+    blink_hold_frames: IntProperty(
+        name="Hold Frames",
+        description="Number of frames to hold the blink closed",
+        default=2,
+        min=0,
+        max=12,
+    )
+    blink_open_frames: IntProperty(
+        name="Open Frames",
+        description="Number of frames used to reopen the eyelids",
+        default=2,
+        min=1,
+        max=12,
+    )
+    blink_seed: IntProperty(
+        name="Random Seed",
+        description="Seed used for interval randomization (0 uses system entropy)",
+        default=0,
+        min=0,
     )
 
     # Quick flip configuration
