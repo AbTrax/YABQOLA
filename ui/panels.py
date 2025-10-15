@@ -5,11 +5,22 @@ from __future__ import annotations
 import bpy
 from bpy.types import Context, Panel
 
+from ..preferences import get_addon_preferences
 from ..properties import AnimationQOLSceneSettings
 
 
 def _get_settings(context: Context) -> AnimationQOLSceneSettings | None:
     return getattr(context.scene, "animation_qol_settings", None)
+
+
+def _feature_enabled(prefs, attr: str) -> bool:
+    if prefs is None:
+        return True
+    return getattr(prefs, attr, True)
+
+
+def _any_features_enabled(prefs, *attrs: str) -> bool:
+    return any(_feature_enabled(prefs, attr) for attr in attrs)
 
 
 def _draw_noise_section(layout, settings: AnimationQOLSceneSettings):
@@ -208,7 +219,7 @@ def _draw_dropper_section(layout, settings: AnimationQOLSceneSettings):
     col.prop(settings, "drop_align_rotation")
     col.operator(
         "animation_qol.drop_to_surface",
-        icon="OUTLINER_OB_PHYSICS",
+        icon="PHYSICS",
         text="Drop to Surface",
     )
 
@@ -225,22 +236,35 @@ class ANIMATIONQOL_PT_base(Panel):
     def draw(self, context: Context):
         layout = self.layout
         settings = _get_settings(context)
+        prefs = get_addon_preferences(context)
 
         if settings is None:
             layout.label(text="Scene settings unavailable", icon="ERROR")
             return
 
-        _draw_noise_section(layout.box(), settings)
-        layout.separator()
-        _draw_offset_section(layout.box(), settings)
-        layout.separator()
-        _draw_stagger_section(layout.box(), settings)
-        layout.separator()
-        _draw_ease_section(layout.box(), settings)
-        layout.separator()
-        _draw_hold_section(layout.box(), settings)
-        layout.separator()
-        _draw_blink_section(layout.box(), settings)
+        sections = [
+            ("enable_noise_randomizer_tools", _draw_noise_section),
+            ("enable_keyframe_offset_tools", _draw_offset_section),
+            ("enable_stagger_timing_tools", _draw_stagger_section),
+            ("enable_ease_presets_tools", _draw_ease_section),
+            ("enable_motion_hold_tools", _draw_hold_section),
+            ("enable_auto_blink_tools", _draw_blink_section),
+        ]
+
+        first_section_drawn = False
+        for attr, drawer in sections:
+            if not _feature_enabled(prefs, attr):
+                continue
+            if first_section_drawn:
+                layout.separator()
+            drawer(layout.box(), settings)
+            first_section_drawn = True
+
+        if not first_section_drawn:
+            layout.label(
+                text="All features hidden via add-on preferences.",
+                icon="INFO",
+            )
 
 
 class ANIMATIONQOL_PT_graph_editor(ANIMATIONQOL_PT_base):
@@ -259,17 +283,24 @@ class ANIMATIONQOL_PT_view3d_quick_flip(Panel):
 
     @classmethod
     def poll(cls, context: Context) -> bool:
-        return _get_settings(context) is not None
+        if _get_settings(context) is None:
+            return False
+        prefs = get_addon_preferences(context)
+        return _feature_enabled(prefs, "enable_quick_flip_tools")
 
     def draw(self, context: Context):
         layout = self.layout
         settings = _get_settings(context)
+        prefs = get_addon_preferences(context)
 
         if settings is None:
             layout.label(text="Scene settings unavailable", icon="ERROR")
             return
 
-        _draw_quick_flip_section(layout.box(), settings)
+        if _feature_enabled(prefs, "enable_quick_flip_tools"):
+            _draw_quick_flip_section(layout.box(), settings)
+        else:
+            layout.label(text="Quick Flip tools disabled in preferences.", icon="INFO")
 
 
 class ANIMATIONQOL_PT_view3d_cleanup(Panel):
@@ -280,17 +311,24 @@ class ANIMATIONQOL_PT_view3d_cleanup(Panel):
 
     @classmethod
     def poll(cls, context: Context) -> bool:
-        return _get_settings(context) is not None
+        if _get_settings(context) is None:
+            return False
+        prefs = get_addon_preferences(context)
+        return _feature_enabled(prefs, "enable_scene_cleanup_tools")
 
     def draw(self, context: Context):
         layout = self.layout
         settings = _get_settings(context)
+        prefs = get_addon_preferences(context)
 
         if settings is None:
             layout.label(text="Scene settings unavailable", icon="ERROR")
             return
 
-        _draw_cleanup_section(layout.box(), settings)
+        if _feature_enabled(prefs, "enable_scene_cleanup_tools"):
+            _draw_cleanup_section(layout.box(), settings)
+        else:
+            layout.label(text="Scene Cleanup tools disabled in preferences.", icon="INFO")
 
 
 class ANIMATIONQOL_PT_view3d_dropper(Panel):
@@ -301,17 +339,24 @@ class ANIMATIONQOL_PT_view3d_dropper(Panel):
 
     @classmethod
     def poll(cls, context: Context) -> bool:
-        return _get_settings(context) is not None
+        if _get_settings(context) is None:
+            return False
+        prefs = get_addon_preferences(context)
+        return _feature_enabled(prefs, "enable_physics_dropper_tools")
 
     def draw(self, context: Context):
         layout = self.layout
         settings = _get_settings(context)
+        prefs = get_addon_preferences(context)
 
         if settings is None:
             layout.label(text="Scene settings unavailable", icon="ERROR")
             return
 
-        _draw_dropper_section(layout.box(), settings)
+        if _feature_enabled(prefs, "enable_physics_dropper_tools"):
+            _draw_dropper_section(layout.box(), settings)
+        else:
+            layout.label(text="Physics Dropper tools disabled in preferences.", icon="INFO")
 
 
 class ANIMATIONQOL_PT_view3d_render(Panel):
@@ -322,19 +367,35 @@ class ANIMATIONQOL_PT_view3d_render(Panel):
 
     @classmethod
     def poll(cls, context: Context) -> bool:
-        return _get_settings(context) is not None
+        if _get_settings(context) is None:
+            return False
+        prefs = get_addon_preferences(context)
+        return _any_features_enabled(
+            prefs,
+            "enable_render_presets_tools",
+            "enable_quick_snap_tools",
+        )
 
     def draw(self, context: Context):
         layout = self.layout
         settings = _get_settings(context)
+        prefs = get_addon_preferences(context)
 
         if settings is None:
             layout.label(text="Scene settings unavailable", icon="ERROR")
             return
 
-        _draw_render_section(layout.box(), settings)
-        layout.separator()
-        _draw_quick_snap_section(layout.box(), settings)
+        render_enabled = _feature_enabled(prefs, "enable_render_presets_tools")
+        quick_snap_enabled = _feature_enabled(prefs, "enable_quick_snap_tools")
+
+        if render_enabled:
+            _draw_render_section(layout.box(), settings)
+        if render_enabled and quick_snap_enabled:
+            layout.separator()
+        if quick_snap_enabled:
+            _draw_quick_snap_section(layout.box(), settings)
+        if not (render_enabled or quick_snap_enabled):
+            layout.label(text="Render tools disabled in preferences.", icon="INFO")
 
 
 CLASSES = (
