@@ -187,23 +187,14 @@ def _draw_render_section(layout, settings: AnimationQOLSceneSettings):
 
 
 def _draw_quick_snap_section(layout, settings: AnimationQOLSceneSettings):
-    layout.label(text="Quick Snap", icon="RENDER_STILL")
+    layout.label(text="Quick Snap", icon="SNAP_ON")
     col = layout.column(align=True)
-    col.prop(settings, "quick_snap_use_preset")
-    col.prop(settings, "quick_snap_use_custom_resolution")
-    if settings.quick_snap_use_custom_resolution:
-        col.prop(settings, "quick_snap_resolution_percentage", slider=True)
-    col.prop(settings, "quick_snap_directory")
-    col.prop(settings, "quick_snap_filename_prefix")
-    row = col.row(align=True)
-    row.prop(settings, "quick_snap_append_frame")
-    row.prop(settings, "quick_snap_append_timestamp")
-    col.prop(settings, "quick_snap_camera")
-    col.prop(settings, "quick_snap_apply_stamp")
+    col.label(text="Pick source then destination directly in the viewport.")
+    col.label(text="Supports Object and Edit mode selections.")
     col.operator(
         "animation_qol.quick_snap",
-        icon="RENDER_STILL",
-        text="Render Quick Snap",
+        icon="SNAP_ON",
+        text="Start Quick Snap",
     )
 
 

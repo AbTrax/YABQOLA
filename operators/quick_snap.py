@@ -1,225 +1,386 @@
-"""Quick snap render helper for still captures."""
+"""Interactive viewport snapping for quickly aligning geometry."""
 
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime
-from pathlib import Path
+from typing import Iterable, Sequence
 
+import bmesh
 import bpy
-from bpy.types import Context, Operator
-
-from ..properties import AnimationQOLSceneSettings
-from ..utils.render import apply_render_preset
+from bpy.types import Context, Event, Operator
+from bpy_extras import view3d_utils
+from mathutils import Vector
 
 __all__ = ["ANIMATIONQOL_OT_quick_snap"]
 
-_EXTENSION_MAP: dict[str, str] = {
-    "BMP": "bmp",
-    "IRIS": "rgb",
-    "PNG": "png",
-    "JPEG": "jpg",
-    "JPEG2000": "jp2",
-    "TIFF": "tif",
-    "OPEN_EXR": "exr",
-    "OPEN_EXR_MULTILAYER": "exr",
-    "TARGA": "tga",
-    "TARGA_RAW": "tga",
-    "CINEON": "cin",
-    "DPX": "dpx",
-    "HDR": "hdr",
-}
+_SNAP_OBJECT_TYPES = {"MESH", "CURVE", "SURFACE", "META", "FONT"}
+_SCREEN_THRESHOLD_PX = 14.0
 
 
-@dataclass
-class _RenderState:
-    filepath: str
-    resolution_percentage: int
-    use_stamp: bool
-    use_simplify: bool
-    image_settings: dict[str, object]
-    ffmpeg_settings: dict[str, object]
-    cycles_settings: dict[str, object] | None
-    eevee_settings: dict[str, object] | None
-    camera: bpy.types.Object | None
-
-
-def _capture_render_state(scene: bpy.types.Scene) -> _RenderState:
-    render = scene.render
-    image_settings = render.image_settings
-    ffmpeg_settings = getattr(render, "ffmpeg", None)
-    cycles = getattr(scene, "cycles", None)
-    eevee = getattr(scene, "eevee", None)
-
-    return _RenderState(
-        filepath=str(render.filepath),
-        resolution_percentage=int(render.resolution_percentage),
-        use_stamp=bool(render.use_stamp),
-        use_simplify=bool(render.use_simplify),
-        image_settings={
-            "file_format": getattr(image_settings, "file_format", None),
-            "color_depth": getattr(image_settings, "color_depth", None),
-            "color_mode": getattr(image_settings, "color_mode", None),
-            "quality": getattr(image_settings, "quality", None),
-        },
-        ffmpeg_settings={
-            "format": getattr(ffmpeg_settings, "format", None) if ffmpeg_settings else None,
-            "constant_rate_factor": getattr(ffmpeg_settings, "constant_rate_factor", None)
-            if ffmpeg_settings
-            else None,
-        },
-        cycles_settings={
-            "samples": getattr(cycles, "samples", None),
-            "preview_samples": getattr(cycles, "preview_samples", None),
-            "use_adaptive_sampling": getattr(cycles, "use_adaptive_sampling", None),
-            "use_denoising": getattr(cycles, "use_denoising", None),
-            "use_preview_denoising": getattr(cycles, "use_preview_denoising", None),
-        }
-        if cycles
-        else None,
-        eevee_settings={
-            "taa_render_samples": getattr(eevee, "taa_render_samples", None),
-            "taa_samples": getattr(eevee, "taa_samples", None),
-            "use_motion_blur": getattr(eevee, "use_motion_blur", None),
-            "use_gtao": getattr(eevee, "use_gtao", None),
-            "use_ssr": getattr(eevee, "use_ssr", None),
-        }
-        if eevee
-        else None,
-        camera=scene.camera,
-    )
-
-
-def _restore_render_state(scene: bpy.types.Scene, state: _RenderState) -> None:
-    render = scene.render
-    render.filepath = state.filepath
-    render.resolution_percentage = state.resolution_percentage
-    render.use_stamp = state.use_stamp
-    render.use_simplify = state.use_simplify
-
-    image_settings = render.image_settings
-    for key, value in state.image_settings.items():
-        if value is None:
-            continue
-        try:
-            setattr(image_settings, key, value)
-        except AttributeError:
-            continue
-
-    ffmpeg_settings = getattr(render, "ffmpeg", None)
-    if ffmpeg_settings:
-        for key, value in state.ffmpeg_settings.items():
-            if value is None:
-                continue
-            try:
-                setattr(ffmpeg_settings, key, value)
-            except AttributeError:
-                continue
-
-    cycles = getattr(scene, "cycles", None)
-    if cycles and state.cycles_settings:
-        for key, value in state.cycles_settings.items():
-            if value is None:
-                continue
-            try:
-                setattr(cycles, key, value)
-            except AttributeError:
-                continue
-
-    eevee = getattr(scene, "eevee", None)
-    if eevee and state.eevee_settings:
-        for key, value in state.eevee_settings.items():
-            if value is None:
-                continue
-            try:
-                setattr(eevee, key, value)
-            except AttributeError:
-                continue
-
-    scene.camera = state.camera
-
-
-def _resolve_base_path(scene: bpy.types.Scene, settings: AnimationQOLSceneSettings) -> Path:
-    directory = settings.quick_snap_directory.strip()
-    if not directory:
-        directory = "//quick_snaps"
-    abs_path = Path(bpy.path.abspath(directory))
-    abs_path.mkdir(parents=True, exist_ok=True)
-    return abs_path
-
-
-def _build_filename(settings: AnimationQOLSceneSettings, frame: int) -> str:
-    prefix = settings.quick_snap_filename_prefix.strip() or "snap"
-    suffix_parts: list[str] = []
-
-    if settings.quick_snap_append_frame:
-        suffix_parts.append(f"f{frame:04d}")
-
-    if settings.quick_snap_append_timestamp:
-        suffix_parts.append(datetime.now().strftime("%Y%m%d_%H%M%S"))
-
-    suffix = "_".join(suffix_parts)
-    return f"{prefix}_{suffix}" if suffix else prefix
+@dataclass(frozen=True)
+class _PickInfo:
+    location: Vector
+    obj: bpy.types.Object | None
+    label: str
 
 
 class ANIMATIONQOL_OT_quick_snap(Operator):
-    """Render a quick still using the configured preset and output options."""
+    """Snap the current selection by picking a source and destination point."""
 
     bl_idname = "animation_qol.quick_snap"
     bl_label = "Quick Snap"
-    bl_description = "Render a still image with the configured snap settings and save it automatically"
+    bl_description = (
+        "Pick a source point on the selection and a destination point anywhere in the scene"
+    )
     bl_options = {"REGISTER", "UNDO"}
 
-    def execute(self, context: Context):
-        scene = context.scene
-        settings: AnimationQOLSceneSettings | None = getattr(
-            scene, "animation_qol_settings", None
-        )
-        if settings is None:
-            self.report({"WARNING"}, "Animation QoL settings unavailable on this scene.")
+    def __init__(self) -> None:
+        self._stage: str = "SOURCE"
+        self._source_point: Vector | None = None
+        self._source_label: str = ""
+        self._area = None
+        self._region = None
+        self._rv3d = None
+
+    # ------------------------------------------------------------------ #
+    # Blender operator lifecycle
+    # ------------------------------------------------------------------ #
+    def invoke(self, context: Context, event: Event):
+        if context.area is None or context.area.type != "VIEW_3D":
+            self.report({"WARNING"}, "Quick Snap must be started from a 3D Viewport.")
+            return {"CANCELLED"}
+        if context.region is None or context.region.type != "WINDOW":
+            self.report({"WARNING"}, "Invoke Quick Snap from the main viewport region.")
+            return {"CANCELLED"}
+        if context.mode not in {"OBJECT", "EDIT_MESH"}:
+            self.report({"WARNING"}, "Quick Snap currently supports Object and Mesh Edit modes.")
+            return {"CANCELLED"}
+        if context.mode == "OBJECT" and not context.selected_objects:
+            self.report({"WARNING"}, "Select at least one object before running Quick Snap.")
+            return {"CANCELLED"}
+        if context.mode == "EDIT_MESH" and not self._any_selected_vertices(context):
+            self.report({"WARNING"}, "Select vertices to move before running Quick Snap.")
             return {"CANCELLED"}
 
-        render = scene.render
-        state = _capture_render_state(scene)
+        self._stage = "SOURCE"
+        self._source_point = None
+        self._source_label = ""
+        self._area = context.area
+        self._region = context.region
+        self._rv3d = getattr(context.space_data, "region_3d", None)
 
-        base_path = _resolve_base_path(scene, settings)
-        filename = _build_filename(settings, context.scene.frame_current)
-        render.filepath = str(base_path / filename)
+        self._set_header("Quick Snap: pick source point")
 
-        if settings.quick_snap_use_preset:
-            apply_render_preset(
-                scene,
-                settings.render_preset,
-                adjust_output=settings.render_adjust_output,
-                adjust_samples=settings.render_adjust_samples,
+        context.window_manager.modal_handler_add(self)
+        return {"RUNNING_MODAL"}
+
+    def modal(self, context: Context, event: Event):
+        if event.type in {"ESC", "RIGHTMOUSE"}:
+            self._clear_header()
+            self.report({"INFO"}, "Quick Snap cancelled.")
+            return {"CANCELLED"}
+
+        if event.type == "LEFTMOUSE" and event.value == "PRESS":
+            result = self._handle_click(context, event)
+            if result == "FINISHED":
+                self._clear_header()
+                return {"FINISHED"}
+            return {"RUNNING_MODAL"}
+
+        return {"PASS_THROUGH"}
+
+    # ------------------------------------------------------------------ #
+    # Event handling helpers
+    # ------------------------------------------------------------------ #
+    def _handle_click(self, context: Context, event: Event) -> str:
+        restrict_to_selection = self._stage == "SOURCE"
+        pick = self._pick_point(context, event, restrict_to_selection)
+
+        if pick is None:
+            self.report({"INFO"}, "No valid geometry under the cursor.")
+            return "BLOCKED"
+
+        if self._stage == "SOURCE":
+            self._source_point = Vector(pick.location)
+            self._source_label = pick.label
+            self._stage = "DEST"
+            self._set_header("Quick Snap: pick destination point")
+            self.report({"INFO"}, f"Source set to {pick.label}.")
+            return "CONTINUE"
+
+        assert self._source_point is not None
+        translation = pick.location - self._source_point
+
+        if translation.length < 1e-6:
+            self.report({"INFO"}, "Source and destination are identical. Nothing snapped.")
+            return "FINISHED"
+
+        moved = self._apply_translation(context, translation)
+        if moved:
+            self.report({"INFO"}, f"Snapped selection to {pick.label}.")
+        else:
+            self.report({"WARNING"}, "No editable geometry was moved.")
+        return "FINISHED"
+
+    def _pick_point(
+        self,
+        context: Context,
+        event: Event,
+        restrict_to_selection: bool,
+    ) -> _PickInfo | None:
+        if self._region is None or self._rv3d is None:
+            return None
+
+        coord = Vector((event.mouse_region_x, event.mouse_region_y))
+        origin = view3d_utils.region_2d_to_origin_3d(self._region, self._rv3d, coord)
+        direction = view3d_utils.region_2d_to_vector_3d(self._region, self._rv3d, coord)
+        direction.normalize()
+
+        depsgraph = context.evaluated_depsgraph_get()
+        hit, location, _normal, face_index, obj, _ = context.scene.ray_cast(
+            depsgraph, origin, direction
+        )
+
+        if hit and obj is not None:
+            if restrict_to_selection and not self._object_in_selection(context, obj):
+                return None
+            return self._build_pick_info(
+                context,
+                obj,
+                coord,
+                location,
+                face_index,
+                depsgraph,
+                restrict_to_selection,
             )
 
-        if settings.quick_snap_use_custom_resolution:
-            render.resolution_percentage = settings.quick_snap_resolution_percentage
+        return self._pick_origin_from_screen(context, coord, restrict_to_selection)
 
-        render.use_stamp = settings.quick_snap_apply_stamp
+    def _build_pick_info(
+        self,
+        context: Context,
+        obj: bpy.types.Object,
+        screen_coord: Vector,
+        hit_location: Vector,
+        face_index: int,
+        depsgraph: bpy.types.Depsgraph,
+        restrict_to_selection: bool,
+    ) -> _PickInfo:
+        if (
+            restrict_to_selection
+            and context.mode == "EDIT_MESH"
+            and obj.type == "MESH"
+            and obj.data.is_editmode
+        ):
+            pick = self._pick_selected_vertex(obj, screen_coord)
+            if pick is not None:
+                return pick
 
-        if settings.quick_snap_camera and settings.quick_snap_camera.type == "CAMERA":
-            scene.camera = settings.quick_snap_camera
+        vertex_candidate = self._vertex_candidate(obj, screen_coord, face_index, depsgraph)
+        origin_candidate = self._origin_candidate(obj, screen_coord)
+
+        candidates: list[tuple[float, _PickInfo]] = []
+        if vertex_candidate is not None:
+            candidates.append(vertex_candidate)
+        if origin_candidate is not None:
+            candidates.append(origin_candidate)
+
+        if candidates:
+            _dist, info = min(candidates, key=lambda item: item[0])
+            return info
+
+        return _PickInfo(location=hit_location, obj=obj, label=f"point on '{obj.name}'")
+
+    def _pick_selected_vertex(
+        self,
+        obj: bpy.types.Object,
+        screen_coord: Vector,
+    ) -> _PickInfo | None:
+        bm = bmesh.from_edit_mesh(obj.data)
+        best_vert: Vector | None = None
+        best_dist = float("inf")
+        for vert in bm.verts:
+            if not vert.select:
+                continue
+            world_co = obj.matrix_world @ vert.co
+            screen_co = view3d_utils.location_3d_to_region_2d(self._region, self._rv3d, world_co)
+            if screen_co is None:
+                continue
+            dist = (screen_co - screen_coord).length
+            if dist < best_dist:
+                best_dist = dist
+                best_vert = world_co
+
+        if best_vert is None:
+            return None
+
+        return _PickInfo(
+            location=best_vert,
+            obj=obj,
+            label=f"selected vertex on '{obj.name}'",
+        )
+
+    def _vertex_candidate(
+        self,
+        obj: bpy.types.Object,
+        screen_coord: Vector,
+        face_index: int,
+        depsgraph: bpy.types.Depsgraph,
+    ) -> tuple[float, _PickInfo] | None:
+        if obj.type not in _SNAP_OBJECT_TYPES:
+            return None
+
+        eval_obj = obj.evaluated_get(depsgraph)
+        mesh = eval_obj.to_mesh()
+        if mesh is None:
+            return None
 
         try:
-            result = bpy.ops.render.render(write_still=True)
-            if "FINISHED" not in result:
-                _restore_render_state(scene, state)
-                self.report({"WARNING"}, "Quick snap cancelled.")
-                return {"CANCELLED"}
-        except Exception as exc:  # pragma: no cover - safety guard for Blender runtime
-            _restore_render_state(scene, state)
-            self.report({"ERROR"}, f"Quick snap failed: {exc}")
-            return {"CANCELLED"}
+            indices: Sequence[int]
+            if 0 <= face_index < len(mesh.polygons):
+                indices = mesh.polygons[face_index].vertices
+            else:
+                indices = range(len(mesh.vertices))
 
-        snap_format = render.image_settings.file_format
-        _restore_render_state(scene, state)
+            best_dist = _SCREEN_THRESHOLD_PX
+            best_info: _PickInfo | None = None
 
-        extension = _EXTENSION_MAP.get(snap_format, snap_format.lower())
-        final_path = base_path / f"{filename}.{extension}"
-        self.report({"INFO"}, f"Quick snap saved to: {final_path}")
-        return {"FINISHED"}
+            for idx in indices:
+                world_co = obj.matrix_world @ mesh.vertices[idx].co
+                screen_co = view3d_utils.location_3d_to_region_2d(
+                    self._region, self._rv3d, world_co
+                )
+                if screen_co is None:
+                    continue
+                dist = (screen_co - screen_coord).length
+                if dist <= best_dist:
+                    best_dist = dist
+                    best_info = _PickInfo(
+                        location=world_co,
+                        obj=obj,
+                        label=f"vertex on '{obj.name}'",
+                    )
+
+            if best_info is None:
+                return None
+            return best_dist, best_info
+        finally:
+            eval_obj.to_mesh_clear()
+
+    def _origin_candidate(
+        self,
+        obj: bpy.types.Object,
+        screen_coord: Vector,
+    ) -> tuple[float, _PickInfo] | None:
+        origin = obj.matrix_world.translation.copy()
+        screen_co = view3d_utils.location_3d_to_region_2d(self._region, self._rv3d, origin)
+        if screen_co is None:
+            return None
+
+        dist = (screen_co - screen_coord).length
+        if dist > _SCREEN_THRESHOLD_PX * 1.2:
+            return None
+        return dist, _PickInfo(location=origin, obj=obj, label=f"origin of '{obj.name}'")
+
+    def _pick_origin_from_screen(
+        self,
+        context: Context,
+        screen_coord: Vector,
+        restrict_to_selection: bool,
+    ) -> _PickInfo | None:
+        candidates: list[tuple[float, _PickInfo]] = []
+        for obj in self._candidate_objects(context, restrict_to_selection):
+            origin = obj.matrix_world.translation.copy()
+            screen_co = view3d_utils.location_3d_to_region_2d(self._region, self._rv3d, origin)
+            if screen_co is None:
+                continue
+            dist = (screen_co - screen_coord).length
+            if dist <= _SCREEN_THRESHOLD_PX * 1.5:
+                candidates.append(
+                    (dist, _PickInfo(location=origin, obj=obj, label=f"origin of '{obj.name}'"))
+                )
+
+        if not candidates:
+            return None
+
+        _dist, info = min(candidates, key=lambda item: item[0])
+        return info
+
+    # ------------------------------------------------------------------ #
+    # Selection helpers
+    # ------------------------------------------------------------------ #
+    def _candidate_objects(self, context: Context, restrict: bool) -> Iterable[bpy.types.Object]:
+        if context.mode == "OBJECT":
+            if restrict:
+                return tuple(obj for obj in context.selected_objects if obj.visible_get())
+            return tuple(obj for obj in context.view_layer.objects if obj.visible_get())
+        if context.mode == "EDIT_MESH":
+            return self._iter_edit_objects(context)
+        return tuple()
+
+    def _iter_edit_objects(self, context: Context) -> Iterable[bpy.types.Object]:
+        objects = getattr(context, "objects_in_mode_unique_data", None)
+        if objects:
+            return tuple(obj for obj in objects if obj.type == "MESH" and obj.data.is_editmode)
+        edit_obj = context.edit_object
+        if edit_obj and edit_obj.type == "MESH" and edit_obj.data.is_editmode:
+            return (edit_obj,)
+        return tuple()
+
+    def _any_selected_vertices(self, context: Context) -> bool:
+        for obj in self._iter_edit_objects(context):
+            bm = bmesh.from_edit_mesh(obj.data)
+            if any(vert.select for vert in bm.verts):
+                return True
+        return False
+
+    def _object_in_selection(self, context: Context, obj: bpy.types.Object) -> bool:
+        if context.mode == "OBJECT":
+            return obj in context.selected_objects
+        if context.mode == "EDIT_MESH":
+            return obj in self._iter_edit_objects(context)
+        return False
+
+    # ------------------------------------------------------------------ #
+    # Transform helpers
+    # ------------------------------------------------------------------ #
+    def _apply_translation(self, context: Context, translation: Vector) -> bool:
+        if context.mode == "OBJECT":
+            for obj in context.selected_objects:
+                obj.location += translation
+            return bool(context.selected_objects)
+
+        if context.mode == "EDIT_MESH":
+            moved = False
+            for obj in self._iter_edit_objects(context):
+                bm = bmesh.from_edit_mesh(obj.data)
+                selected_verts = [vert for vert in bm.verts if vert.select]
+                if not selected_verts:
+                    continue
+                local_translation = self._world_to_local_vector(obj, translation)
+                for vert in selected_verts:
+                    vert.co += local_translation
+                bmesh.update_edit_mesh(obj.data, loop_triangles=False, destructive=False)
+                moved = True
+            return moved
+
+        return False
+
+    @staticmethod
+    def _world_to_local_vector(obj: bpy.types.Object, vector: Vector) -> Vector:
+        matrix = obj.matrix_world.inverted_safe().to_3x3()
+        return matrix @ vector
+
+    # ------------------------------------------------------------------ #
+    # UI helpers
+    # ------------------------------------------------------------------ #
+    def _set_header(self, message: str) -> None:
+        if self._area is not None:
+            self._area.header_text_set(message)
+
+    def _clear_header(self) -> None:
+        if self._area is not None:
+            self._area.header_text_set(None)
 
 
 CLASSES = (ANIMATIONQOL_OT_quick_snap,)

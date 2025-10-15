@@ -37,8 +37,8 @@ YABQOLA is a modular collection of animation utilities for Blender created by **
   - Keeps motion blur, sampling, and output formats in sync across render engines.
 
 - **Quick Snap**
-  - Captures timestamped stills to a dedicated folder with optional camera overrides.
-  - Respects render presets or custom resolution overrides for consistent look-dev snapshots.
+  - Pick a source point and a destination point to snap the active selection instantly.
+  - Works with objects or mesh components, honoring nearby vertices and object origins.
 
 - **Physics Dropper**
   - Drops selected objects straight to the nearest surface using ray-cast collisions.
@@ -123,8 +123,10 @@ Each feature lives in its own collapsible panel so you can focus on the tools yo
 
 ### Quick Snap
 
-- Configure a snap directory, filename prefix, and timestamp/frame options for rapid look-dev captures.
-- Optionally override resolution or camera and reuse the active render preset before triggering **Quick Snap**.
+- Launch **Start Quick Snap** from the YABQOLA sidebar or the optional shortcut.
+- Click once on the point you want to move (object origin, vertex, or surface point). Then click the destination point.
+- Works in Object and Mesh Edit modes. In edit mode the operator respects the currently selected vertices.
+- Aim near a vertex or origin to prioritize those targets; otherwise the exact surface point is used.
 
 ### Physics Dropper
 

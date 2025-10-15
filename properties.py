@@ -11,11 +11,7 @@ from bpy.props import (
     PointerProperty,
     StringProperty,
 )
-from bpy.types import Object, PropertyGroup, Scene
-
-
-def _camera_poll(_self, obj: Object | None) -> bool:
-    return obj is None or getattr(obj, "type", "") == "CAMERA"
+from bpy.types import PropertyGroup, Scene
 
 
 class AnimationQOLSceneSettings(PropertyGroup):
@@ -238,56 +234,6 @@ class AnimationQOLSceneSettings(PropertyGroup):
         name="Adjust Samples",
         description="Update render engine sample counts according to the preset",
         default=True,
-    )
-
-    # Quick snap configuration
-    quick_snap_use_preset: BoolProperty(
-        name="Apply Render Preset",
-        description="Apply the selected render preset before capturing the quick snap",
-        default=True,
-    )
-    quick_snap_use_custom_resolution: BoolProperty(
-        name="Override Resolution",
-        description="Render the quick snap at a specific resolution percentage",
-        default=False,
-    )
-    quick_snap_resolution_percentage: IntProperty(
-        name="Resolution %",
-        description="Resolution percentage override applied during the quick snap",
-        default=100,
-        min=1,
-        max=300,
-    )
-    quick_snap_directory: StringProperty(
-        name="Output Directory",
-        description="Directory used to store quick snap renders (falls back to //quick_snaps)",
-        subtype="DIR_PATH",
-    )
-    quick_snap_filename_prefix: StringProperty(
-        name="Filename Prefix",
-        description="Filename prefix used for quick snaps",
-        default="snap",
-    )
-    quick_snap_append_timestamp: BoolProperty(
-        name="Append Timestamp",
-        description="Append a timestamp to the filename to avoid overwriting previous snaps",
-        default=True,
-    )
-    quick_snap_append_frame: BoolProperty(
-        name="Append Frame",
-        description="Append the current frame number to the filename",
-        default=True,
-    )
-    quick_snap_camera: PointerProperty(
-        name="Camera Override",
-        description="Optional camera to use for quick snap renders (defaults to the scene camera)",
-        type=bpy.types.Object,
-        poll=_camera_poll,
-    )
-    quick_snap_apply_stamp: BoolProperty(
-        name="Use Stamp",
-        description="Enable the render stamp (if configured) for quick snap renders",
-        default=False,
     )
 
     # Physics dropper configuration
