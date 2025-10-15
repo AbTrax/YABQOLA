@@ -36,10 +36,6 @@ YABQOLA is a modular collection of animation utilities for Blender created by **
   - One-click Cycles and Eevee presets tuned for clay previews, draft stills, and final hero frames.
   - Keeps motion blur, sampling, and output formats in sync across render engines.
 
-- **Quick Snap**
-  - Pick a source point and a destination point to snap the active selection instantly.
-  - Works with objects or mesh components, honoring nearby vertices and object origins.
-
 - **Auto Blink**
   - Generates natural blink patterns on shape keys across a chosen frame range.
   - Supports random timing, adjustable durations, and per-scene seed control.
@@ -116,13 +112,6 @@ Each feature lives in its own collapsible panel so you can focus on the tools yo
 
 - Pick from clay, draft, or final still presets tuned for both Cycles and Eevee.
 - Apply output, sampling, and motion blur overrides in one click via the sidebar or add-on preferences.
-
-### Quick Snap
-
-- Launch **Start Quick Snap** from the YABQOLA sidebar or the optional shortcut.
-- Click once on the point you want to move (object origin, vertex, or surface point). Then click the destination point.
-- Works in Object and Mesh Edit modes. In edit mode the operator respects the currently selected vertices.
-- Aim near a vertex or origin to prioritize those targets; otherwise the exact surface point is used.
 
 ### Auto Blink
 

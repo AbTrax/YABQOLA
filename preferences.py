@@ -49,13 +49,6 @@ def _install_keymaps(context: Context, prefs: "AnimationQOLPreferences") -> None
     if keyconfigs is None:
         return
 
-    if prefs.enable_quick_snap_tools and prefs.enable_quick_snap_shortcut:
-        km = keyconfigs.keymaps.new(name="3D View", space_type="VIEW_3D")
-        kmi = km.keymap_items.new(
-            "animation_qol.quick_snap", "F12", "PRESS", ctrl=True, alt=True
-        )
-        _addon_keymaps.append((km, kmi))
-
     if prefs.enable_auto_blink_tools and prefs.enable_auto_blink_shortcut:
         km = keyconfigs.keymaps.new(name="Graph Editor", space_type="GRAPH_EDITOR")
         kmi = km.keymap_items.new(
@@ -128,18 +121,6 @@ class AnimationQOLPreferences(AddonPreferences):
         description="Show the Render Presets tools",
         default=True,
     )
-    enable_quick_snap_tools: BoolProperty(
-        name="Quick Snap",
-        description="Show the Quick Snap tools",
-        default=True,
-    )
-
-    enable_quick_snap_shortcut: BoolProperty(
-        name="Quick Snap Shortcut",
-        description="Enable the Ctrl+Alt+F12 shortcut for the Quick Snap operator",
-        default=False,
-        update=_update_keymaps,
-    )
     enable_auto_blink_shortcut: BoolProperty(
         name="Auto Blink Shortcut",
         description="Enable the Ctrl+Alt+B shortcut for the Auto Blink operator in the Graph Editor",
@@ -164,13 +145,9 @@ class AnimationQOLPreferences(AddonPreferences):
         column.prop(self, "enable_quick_flip_tools")
         column.prop(self, "enable_scene_cleanup_tools")
         column.prop(self, "enable_render_presets_tools")
-        column.prop(self, "enable_quick_snap_tools")
 
         shortcuts_box = layout.box()
         shortcuts_box.label(text="Optional Shortcuts", icon="KEYFRAME")
-        row = shortcuts_box.row()
-        row.enabled = self.enable_quick_snap_tools
-        row.prop(self, "enable_quick_snap_shortcut")
         row = shortcuts_box.row()
         row.enabled = self.enable_auto_blink_tools
         row.prop(self, "enable_auto_blink_shortcut")

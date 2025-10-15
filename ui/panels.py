@@ -186,18 +186,6 @@ def _draw_render_section(layout, settings: AnimationQOLSceneSettings):
     )
 
 
-def _draw_quick_snap_section(layout, settings: AnimationQOLSceneSettings):
-    layout.label(text="Quick Snap", icon="SNAP_ON")
-    col = layout.column(align=True)
-    col.label(text="Pick source then destination directly in the viewport.")
-    col.label(text="Supports Object and Edit mode selections.")
-    col.operator(
-        "animation_qol.quick_snap",
-        icon="SNAP_ON",
-        text="Start Quick Snap",
-    )
-
-
 class ANIMATIONQOL_PT_base(Panel):
     bl_label = "YABQOLA"
     bl_region_type = "UI"
@@ -280,35 +268,6 @@ class ANIMATIONQOL_PT_view3d_quick_flip(Panel):
             layout.label(text="Quick Flip tools disabled in preferences.", icon="INFO")
 
 
-class ANIMATIONQOL_PT_view3d_quick_snap(Panel):
-    bl_label = "YABQOLA: Quick Snap"
-    bl_space_type = "VIEW_3D"
-    bl_region_type = "UI"
-    bl_category = "YABQOLA"
-    bl_options = {"DEFAULT_CLOSED"}
-
-    @classmethod
-    def poll(cls, context: Context) -> bool:
-        if _get_settings(context) is None:
-            return False
-        prefs = get_addon_preferences(context)
-        return _feature_enabled(prefs, "enable_quick_snap_tools")
-
-    def draw(self, context: Context):
-        layout = self.layout
-        settings = _get_settings(context)
-        prefs = get_addon_preferences(context)
-
-        if settings is None:
-            layout.label(text="Scene settings unavailable", icon="ERROR")
-            return
-
-        if _feature_enabled(prefs, "enable_quick_snap_tools"):
-            _draw_quick_snap_section(layout.box(), settings)
-        else:
-            layout.label(text="Quick Snap tools disabled in preferences.", icon="INFO")
-
-
 class ANIMATIONQOL_PT_view3d_cleanup(Panel):
     bl_label = "YABQOLA: Scene Cleanup"
     bl_space_type = "VIEW_3D"
@@ -371,7 +330,6 @@ CLASSES = (
     ANIMATIONQOL_PT_graph_editor,
     ANIMATIONQOL_PT_dopesheet,
     ANIMATIONQOL_PT_view3d_quick_flip,
-    ANIMATIONQOL_PT_view3d_quick_snap,
     ANIMATIONQOL_PT_view3d_cleanup,
     ANIMATIONQOL_PT_view3d_render,
 )
