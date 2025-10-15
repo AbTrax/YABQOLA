@@ -122,17 +122,17 @@ def _apply_eevee_settings(scene: Scene, preset: str) -> None:
             pass
 
     if preset == "PREVIEW":
-        eevee.use_motion_blur = False
-        eevee.use_gtao = False
-        eevee.use_ssr = False
+        _set_if_hasattr(eevee, "use_motion_blur", False)
+        _set_if_hasattr(eevee, "use_gtao", False)
+        _set_if_hasattr(eevee, "use_ssr", False)
     elif preset == "PLAYBLAST":
-        eevee.use_motion_blur = False
-        eevee.use_gtao = True
-        eevee.use_ssr = True
+        _set_if_hasattr(eevee, "use_motion_blur", False)
+        _set_if_hasattr(eevee, "use_gtao", True)
+        _set_if_hasattr(eevee, "use_ssr", True)
     elif preset in {"STILL_DRAFT", "STILL_FINAL", "STILL_CLAY", "FINAL"}:
-        eevee.use_motion_blur = True
-        eevee.use_gtao = True
-        eevee.use_ssr = True
+        _set_if_hasattr(eevee, "use_motion_blur", True)
+        _set_if_hasattr(eevee, "use_gtao", True)
+        _set_if_hasattr(eevee, "use_ssr", True)
 
 
 def apply_render_preset(
@@ -152,3 +152,10 @@ def apply_render_preset(
         _apply_eevee_settings(scene, preset)
 
     scene.render.use_simplify = preset in {"PREVIEW", "PLAYBLAST", "STILL_CLAY"}
+def _set_if_hasattr(obj, attr: str, value) -> None:
+    if not hasattr(obj, attr):
+        return
+    try:
+        setattr(obj, attr, value)
+    except Exception:
+        pass

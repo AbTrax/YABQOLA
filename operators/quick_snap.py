@@ -34,10 +34,18 @@ class ANIMATIONQOL_OT_quick_snap(Operator):
     )
     bl_options = {"REGISTER", "UNDO"}
 
-    def __init__(self) -> None:
-        self._stage: str = "SOURCE"
-        self._source_point: Vector | None = None
-        self._source_label: str = ""
+    _stage: str
+    _source_point: Vector | None
+    _source_label: str
+    _area: bpy.types.Area | None
+    _region: bpy.types.Region | None
+    _rv3d: bpy.types.RegionView3D | None
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._stage = "SOURCE"
+        self._source_point = None
+        self._source_label = ""
         self._area = None
         self._region = None
         self._rv3d = None
@@ -62,12 +70,7 @@ class ANIMATIONQOL_OT_quick_snap(Operator):
             self.report({"WARNING"}, "Select vertices to move before running Quick Snap.")
             return {"CANCELLED"}
 
-        self._stage = "SOURCE"
-        self._source_point = None
-        self._source_label = ""
-        self._area = context.area
-        self._region = context.region
-        self._rv3d = getattr(context.space_data, "region_3d", None)
+        self._reset_state(context)
 
         self._set_header("Quick Snap: pick source point")
 
@@ -88,6 +91,14 @@ class ANIMATIONQOL_OT_quick_snap(Operator):
             return {"RUNNING_MODAL"}
 
         return {"PASS_THROUGH"}
+
+    def _reset_state(self, context: Context) -> None:
+        self._stage = "SOURCE"
+        self._source_point = None
+        self._source_label = ""
+        self._area = context.area
+        self._region = context.region
+        self._rv3d = getattr(context.space_data, "region_3d", None)
 
     # ------------------------------------------------------------------ #
     # Event handling helpers

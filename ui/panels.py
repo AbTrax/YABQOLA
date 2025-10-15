@@ -294,6 +294,34 @@ class ANIMATIONQOL_PT_view3d_quick_flip(Panel):
             layout.label(text="Quick Flip tools disabled in preferences.", icon="INFO")
 
 
+class ANIMATIONQOL_PT_view3d_quick_snap(Panel):
+    bl_label = "YABQOLA: Quick Snap"
+    bl_space_type = "VIEW_3D"
+    bl_region_type = "UI"
+    bl_category = "YABQOLA"
+
+    @classmethod
+    def poll(cls, context: Context) -> bool:
+        if _get_settings(context) is None:
+            return False
+        prefs = get_addon_preferences(context)
+        return _feature_enabled(prefs, "enable_quick_snap_tools")
+
+    def draw(self, context: Context):
+        layout = self.layout
+        settings = _get_settings(context)
+        prefs = get_addon_preferences(context)
+
+        if settings is None:
+            layout.label(text="Scene settings unavailable", icon="ERROR")
+            return
+
+        if _feature_enabled(prefs, "enable_quick_snap_tools"):
+            _draw_quick_snap_section(layout.box(), settings)
+        else:
+            layout.label(text="Quick Snap tools disabled in preferences.", icon="INFO")
+
+
 class ANIMATIONQOL_PT_view3d_cleanup(Panel):
     bl_label = "YABQOLA: Scene Cleanup"
     bl_space_type = "VIEW_3D"
@@ -361,11 +389,7 @@ class ANIMATIONQOL_PT_view3d_render(Panel):
         if _get_settings(context) is None:
             return False
         prefs = get_addon_preferences(context)
-        return _any_features_enabled(
-            prefs,
-            "enable_render_presets_tools",
-            "enable_quick_snap_tools",
-        )
+        return _feature_enabled(prefs, "enable_render_presets_tools")
 
     def draw(self, context: Context):
         layout = self.layout
@@ -376,16 +400,9 @@ class ANIMATIONQOL_PT_view3d_render(Panel):
             layout.label(text="Scene settings unavailable", icon="ERROR")
             return
 
-        render_enabled = _feature_enabled(prefs, "enable_render_presets_tools")
-        quick_snap_enabled = _feature_enabled(prefs, "enable_quick_snap_tools")
-
-        if render_enabled:
+        if _feature_enabled(prefs, "enable_render_presets_tools"):
             _draw_render_section(layout.box(), settings)
-        if render_enabled and quick_snap_enabled:
-            layout.separator()
-        if quick_snap_enabled:
-            _draw_quick_snap_section(layout.box(), settings)
-        if not (render_enabled or quick_snap_enabled):
+        else:
             layout.label(text="Render tools disabled in preferences.", icon="INFO")
 
 
@@ -393,6 +410,7 @@ CLASSES = (
     ANIMATIONQOL_PT_graph_editor,
     ANIMATIONQOL_PT_dopesheet,
     ANIMATIONQOL_PT_view3d_quick_flip,
+    ANIMATIONQOL_PT_view3d_quick_snap,
     ANIMATIONQOL_PT_view3d_cleanup,
     ANIMATIONQOL_PT_view3d_dropper,
     ANIMATIONQOL_PT_view3d_render,
