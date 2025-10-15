@@ -40,10 +40,6 @@ YABQOLA is a modular collection of animation utilities for Blender created by **
   - Pick a source point and a destination point to snap the active selection instantly.
   - Works with objects or mesh components, honoring nearby vertices and object origins.
 
-- **Physics Dropper**
-  - Drops selected objects straight to the nearest surface using ray-cast collisions.
-  - Optional surface normal alignment keeps props flush with the ground on contact.
-
 - **Auto Blink**
   - Generates natural blink patterns on shape keys across a chosen frame range.
   - Supports random timing, adjustable durations, and per-scene seed control.
@@ -127,11 +123,6 @@ Each feature lives in its own collapsible panel so you can focus on the tools yo
 - Click once on the point you want to move (object origin, vertex, or surface point). Then click the destination point.
 - Works in Object and Mesh Edit modes. In edit mode the operator respects the currently selected vertices.
 - Aim near a vertex or origin to prioritize those targets; otherwise the exact surface point is used.
-
-### Physics Dropper
-
-- Select objects and click **Drop to Surface** to ray cast each item onto nearby collision geometry.
-- Provide a collision collection, offsets, and normal alignment to control how props settle on contact.
 
 ### Auto Blink
 

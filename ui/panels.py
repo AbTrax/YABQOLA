@@ -198,23 +198,6 @@ def _draw_quick_snap_section(layout, settings: AnimationQOLSceneSettings):
     )
 
 
-def _draw_dropper_section(layout, settings: AnimationQOLSceneSettings):
-    layout.label(text="Physics Dropper", icon="PHYSICS")
-    col = layout.column(align=True)
-    col.prop(settings, "drop_collision_collection")
-    col.prop(settings, "drop_include_subcollections")
-    row = col.row(align=True)
-    row.prop(settings, "drop_max_distance")
-    row.prop(settings, "drop_ray_offset")
-    col.prop(settings, "drop_contact_offset")
-    col.prop(settings, "drop_align_rotation")
-    col.operator(
-        "animation_qol.drop_to_surface",
-        icon="PHYSICS",
-        text="Drop to Surface",
-    )
-
-
 class ANIMATIONQOL_PT_base(Panel):
     bl_label = "YABQOLA"
     bl_region_type = "UI"
@@ -260,10 +243,12 @@ class ANIMATIONQOL_PT_base(Panel):
 
 class ANIMATIONQOL_PT_graph_editor(ANIMATIONQOL_PT_base):
     bl_space_type = "GRAPH_EDITOR"
+    bl_options = {"DEFAULT_CLOSED"}
 
 
 class ANIMATIONQOL_PT_dopesheet(ANIMATIONQOL_PT_base):
     bl_space_type = "DOPESHEET_EDITOR"
+    bl_options = {"DEFAULT_CLOSED"}
 
 
 class ANIMATIONQOL_PT_view3d_quick_flip(Panel):
@@ -271,6 +256,7 @@ class ANIMATIONQOL_PT_view3d_quick_flip(Panel):
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
     bl_category = "YABQOLA"
+    bl_options = {"DEFAULT_CLOSED"}
 
     @classmethod
     def poll(cls, context: Context) -> bool:
@@ -299,6 +285,7 @@ class ANIMATIONQOL_PT_view3d_quick_snap(Panel):
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
     bl_category = "YABQOLA"
+    bl_options = {"DEFAULT_CLOSED"}
 
     @classmethod
     def poll(cls, context: Context) -> bool:
@@ -327,6 +314,7 @@ class ANIMATIONQOL_PT_view3d_cleanup(Panel):
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
     bl_category = "YABQOLA"
+    bl_options = {"DEFAULT_CLOSED"}
 
     @classmethod
     def poll(cls, context: Context) -> bool:
@@ -350,39 +338,12 @@ class ANIMATIONQOL_PT_view3d_cleanup(Panel):
             layout.label(text="Scene Cleanup tools disabled in preferences.", icon="INFO")
 
 
-class ANIMATIONQOL_PT_view3d_dropper(Panel):
-    bl_label = "YABQOLA: Physics Dropper"
-    bl_space_type = "VIEW_3D"
-    bl_region_type = "UI"
-    bl_category = "YABQOLA"
-
-    @classmethod
-    def poll(cls, context: Context) -> bool:
-        if _get_settings(context) is None:
-            return False
-        prefs = get_addon_preferences(context)
-        return _feature_enabled(prefs, "enable_physics_dropper_tools")
-
-    def draw(self, context: Context):
-        layout = self.layout
-        settings = _get_settings(context)
-        prefs = get_addon_preferences(context)
-
-        if settings is None:
-            layout.label(text="Scene settings unavailable", icon="ERROR")
-            return
-
-        if _feature_enabled(prefs, "enable_physics_dropper_tools"):
-            _draw_dropper_section(layout.box(), settings)
-        else:
-            layout.label(text="Physics Dropper tools disabled in preferences.", icon="INFO")
-
-
 class ANIMATIONQOL_PT_view3d_render(Panel):
     bl_label = "YABQOLA: Render Presets"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
     bl_category = "YABQOLA"
+    bl_options = {"DEFAULT_CLOSED"}
 
     @classmethod
     def poll(cls, context: Context) -> bool:
@@ -412,7 +373,6 @@ CLASSES = (
     ANIMATIONQOL_PT_view3d_quick_flip,
     ANIMATIONQOL_PT_view3d_quick_snap,
     ANIMATIONQOL_PT_view3d_cleanup,
-    ANIMATIONQOL_PT_view3d_dropper,
     ANIMATIONQOL_PT_view3d_render,
 )
 

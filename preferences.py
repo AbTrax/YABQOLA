@@ -56,13 +56,6 @@ def _install_keymaps(context: Context, prefs: "AnimationQOLPreferences") -> None
         )
         _addon_keymaps.append((km, kmi))
 
-    if prefs.enable_physics_dropper_tools and prefs.enable_dropper_shortcut:
-        km = keyconfigs.keymaps.new(name="3D View", space_type="VIEW_3D")
-        kmi = km.keymap_items.new(
-            "animation_qol.drop_to_surface", "D", "PRESS", ctrl=True, alt=True
-        )
-        _addon_keymaps.append((km, kmi))
-
     if prefs.enable_auto_blink_tools and prefs.enable_auto_blink_shortcut:
         km = keyconfigs.keymaps.new(name="Graph Editor", space_type="GRAPH_EDITOR")
         kmi = km.keymap_items.new(
@@ -125,11 +118,6 @@ class AnimationQOLPreferences(AddonPreferences):
         description="Show the Quick Flip tools",
         default=True,
     )
-    enable_physics_dropper_tools: BoolProperty(
-        name="Physics Dropper",
-        description="Show the Physics Dropper tools",
-        default=True,
-    )
     enable_scene_cleanup_tools: BoolProperty(
         name="Scene Cleanup",
         description="Show the Scene Cleanup tools",
@@ -149,12 +137,6 @@ class AnimationQOLPreferences(AddonPreferences):
     enable_quick_snap_shortcut: BoolProperty(
         name="Quick Snap Shortcut",
         description="Enable the Ctrl+Alt+F12 shortcut for the Quick Snap operator",
-        default=False,
-        update=_update_keymaps,
-    )
-    enable_dropper_shortcut: BoolProperty(
-        name="Physics Dropper Shortcut",
-        description="Enable the Ctrl+Alt+D shortcut for the Physics Dropper operator",
         default=False,
         update=_update_keymaps,
     )
@@ -180,7 +162,6 @@ class AnimationQOLPreferences(AddonPreferences):
         column.prop(self, "enable_motion_hold_tools")
         column.prop(self, "enable_auto_blink_tools")
         column.prop(self, "enable_quick_flip_tools")
-        column.prop(self, "enable_physics_dropper_tools")
         column.prop(self, "enable_scene_cleanup_tools")
         column.prop(self, "enable_render_presets_tools")
         column.prop(self, "enable_quick_snap_tools")
@@ -190,9 +171,6 @@ class AnimationQOLPreferences(AddonPreferences):
         row = shortcuts_box.row()
         row.enabled = self.enable_quick_snap_tools
         row.prop(self, "enable_quick_snap_shortcut")
-        row = shortcuts_box.row()
-        row.enabled = self.enable_physics_dropper_tools
-        row.prop(self, "enable_dropper_shortcut")
         row = shortcuts_box.row()
         row.enabled = self.enable_auto_blink_tools
         row.prop(self, "enable_auto_blink_shortcut")

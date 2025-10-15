@@ -236,46 +236,6 @@ class AnimationQOLSceneSettings(PropertyGroup):
         default=True,
     )
 
-    # Physics dropper configuration
-    drop_collision_collection: PointerProperty(
-        name="Collision Collection",
-        description="Optional collection containing geometry used as ground collision",
-        type=bpy.types.Collection,
-    )
-    drop_include_subcollections: BoolProperty(
-        name="Include Sub-collections",
-        description="Use objects from child collections when a collision collection is provided",
-        default=True,
-    )
-    drop_max_distance: FloatProperty(
-        name="Max Drop Distance",
-        description="Maximum distance to search for ground geometry below each object",
-        default=100.0,
-        min=0.01,
-        soft_max=500.0,
-    )
-    drop_contact_offset: FloatProperty(
-        name="Contact Offset",
-        description="Gap left between the object and the detected ground surface",
-        default=0.0,
-        min=0.0,
-        max=1.0,
-        step=0.01,
-    )
-    drop_ray_offset: FloatProperty(
-        name="Ray Start Offset",
-        description="Height added above the object's bounds before casting the drop ray",
-        default=0.5,
-        min=0.0,
-        max=10.0,
-        step=0.1,
-    )
-    drop_align_rotation: BoolProperty(
-        name="Align to Surface",
-        description="Align each object's local Z axis to the hit surface normal after dropping",
-        default=False,
-    )
-
     # Auto blink configuration
     blink_shape_key_name: StringProperty(
         name="Shape Key",
