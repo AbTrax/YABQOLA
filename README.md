@@ -36,10 +36,6 @@ YABQOLA is a modular collection of animation utilities for Blender created by **
   - One-click Cycles and Eevee presets tuned for clay previews, draft stills, and final hero frames.
   - Keeps motion blur, sampling, and output formats in sync across render engines.
 
-- **Auto Blink**
-  - Generates natural blink patterns on shape keys across a chosen frame range.
-  - Supports random timing, adjustable durations, and per-scene seed control.
-
 ---
 
 ## Installation
@@ -112,13 +108,6 @@ Each feature lives in its own collapsible panel so you can focus on the tools yo
 
 - Pick from clay, draft, or final still presets tuned for both Cycles and Eevee.
 - Apply output, sampling, and motion blur overrides in one click via the sidebar or add-on preferences.
-
-### Auto Blink
-
-- Target any shape key (defaulting to `Blink`) and specify close, hold, and open timings.
-- Blend between deterministic intervals and seeded randomness to create natural blinking cycles across a frame range.
-
----
 
 ## Release Notes
 

@@ -105,30 +105,6 @@ def _draw_hold_section(layout, settings: AnimationQOLSceneSettings):
     )
 
 
-def _draw_blink_section(layout, settings: AnimationQOLSceneSettings):
-    layout.label(text="Auto Blink", icon="HIDE_OFF")
-    col = layout.column(align=True)
-    col.prop(settings, "blink_shape_key_name")
-    col.prop(settings, "blink_strength", slider=True)
-    col.prop(settings, "blink_use_selected_objects")
-    row = col.row(align=True)
-    row.prop(settings, "blink_frame_start")
-    row.prop(settings, "blink_frame_end")
-    row = col.row(align=True)
-    row.prop(settings, "blink_interval")
-    row.prop(settings, "blink_interval_random")
-    row = col.row(align=True)
-    row.prop(settings, "blink_close_frames")
-    row.prop(settings, "blink_open_frames")
-    col.prop(settings, "blink_hold_frames")
-    col.prop(settings, "blink_seed")
-    col.operator(
-        "animation_qol.generate_auto_blinks",
-        icon="HIDE_OFF",
-        text="Generate Blinks",
-    )
-
-
 def _draw_quick_flip_section(layout, settings: AnimationQOLSceneSettings):
     layout.label(text="Quick Flip", icon="ARROW_LEFTRIGHT")
     col = layout.column(align=True)
@@ -210,7 +186,6 @@ class ANIMATIONQOL_PT_base(Panel):
             ("enable_stagger_timing_tools", _draw_stagger_section),
             ("enable_ease_presets_tools", _draw_ease_section),
             ("enable_motion_hold_tools", _draw_hold_section),
-            ("enable_auto_blink_tools", _draw_blink_section),
         ]
 
         first_section_drawn = False

@@ -20,7 +20,6 @@ import bpy
 
 from . import preferences, properties
 from .operators import (
-    auto_blink,
     ease_presets,
     keyframe_offset,
     motion_hold,
@@ -40,7 +39,6 @@ MODULES = (
     stagger_timing,
     ease_presets,
     motion_hold,
-    auto_blink,
     quick_flip,
     render_presets,
     scene_cleanup,
