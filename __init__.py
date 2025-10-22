@@ -5,7 +5,7 @@ bl_info = {
     "name": "YABQOLA: Yet Another Blender Quality of Life Extension",
     "description": "Modular animation QoL tools: noise randomizer, timing/stagger, quick flip, scene cleanup, and a reference camera matcher.",
     "author": "Xnom3d",
-    "version": (1, 2, 1),
+    "version": (1, 3, 0),
     "blender": (4, 2, 0),
     "location": "Graph/Dope Sheet & 3D View > Sidebar",
     "warning": "",

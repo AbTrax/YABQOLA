@@ -1,6 +1,6 @@
 # YABQOLA - Yet Another Blender Quality of Life Extension
 
-**Version:** 1.2.1 - **Blender Compatibility:** 4.2+
+**Version:** 1.3.0 - **Blender Compatibility:** 4.2+
 
 YABQOLA is a modular collection of animation utilities for Blender created by **Xnom3d**. It focuses on speeding up common cleanup and timing tasks so you can stay in the flow while animating. Install it once and access every tool from the **Graph Editor**, **Dope Sheet**, or **3D Viewport** sidebars under the **YABQOLA** tab.
 
