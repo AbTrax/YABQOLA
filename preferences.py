@@ -111,6 +111,11 @@ class AnimationQOLPreferences(AddonPreferences):
         description="Show the Render Presets tools",
         default=True,
     )
+    enable_reference_camera_tools: BoolProperty(
+        name="Reference Camera Matcher",
+        description="Show the Reference Camera Matcher tools",
+        default=True,
+    )
     def draw(self, _context: Context):
         layout = self.layout
         layout.use_property_split = False
@@ -127,6 +132,7 @@ class AnimationQOLPreferences(AddonPreferences):
         column.prop(self, "enable_quick_flip_tools")
         column.prop(self, "enable_scene_cleanup_tools")
         column.prop(self, "enable_render_presets_tools")
+        column.prop(self, "enable_reference_camera_tools")
 
 
 def register() -> None:

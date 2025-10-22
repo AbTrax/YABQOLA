@@ -13,6 +13,35 @@ from bpy.props import (
 )
 from bpy.types import PropertyGroup, Scene
 
+from .utils import SENSOR_PRESETS
+
+
+def _refcam_on_preset_change(self, _context):
+    preset = self.refcam_sensor_preset
+    if preset == "CUSTOM":
+        return
+    sensor_width, sensor_height, _ = SENSOR_PRESETS[preset]
+    self.refcam_sensor_width = sensor_width
+    self.refcam_sensor_height = sensor_height
+
+
+def _refcam_enable_equiv(self, _context):
+    if self.refcam_use_equiv_35:
+        self.refcam_use_fov_h = False
+        self.refcam_use_fov_v = False
+
+
+def _refcam_enable_fov_h(self, _context):
+    if self.refcam_use_fov_h:
+        self.refcam_use_equiv_35 = False
+        self.refcam_use_fov_v = False
+
+
+def _refcam_enable_fov_v(self, _context):
+    if self.refcam_use_fov_v:
+        self.refcam_use_equiv_35 = False
+        self.refcam_use_fov_h = False
+
 
 class AnimationQOLSceneSettings(PropertyGroup):
     """Persistent settings exposed in the UI panels."""
@@ -300,6 +329,103 @@ class AnimationQOLSceneSettings(PropertyGroup):
     cleanup_exclude_linked_data: BoolProperty(
         name="Skip Linked Data",
         description="Ignore objects that come from external libraries",
+        default=True,
+    )
+
+    # Reference camera configuration
+    refcam_image_path: StringProperty(
+        name="Reference Image",
+        subtype="FILE_PATH",
+        description="File path to the reference image used for camera matching",
+    )
+    refcam_image: PointerProperty(
+        name="Image Datablock",
+        description="Loaded image datablock",
+        type=bpy.types.Image,
+    )
+    refcam_sensor_preset: EnumProperty(
+        name="Sensor Preset",
+        description="Choose a sensor preset or switch to Custom to enter values manually",
+        items=[
+            ("FULL_FRAME", "Full Frame 36x24", SENSOR_PRESETS["FULL_FRAME"][2]),
+            ("APS_C", "APS-C 23.6x15.7", SENSOR_PRESETS["APS_C"][2]),
+            ("MFT", "Micro Four Thirds 17.3x13", SENSOR_PRESETS["MFT"][2]),
+            ("SUPER35", "Super35 (Arri)", SENSOR_PRESETS["SUPER35"][2]),
+            ("1_INCH", '1" type 13.2x8.8', SENSOR_PRESETS["1_INCH"][2]),
+            ("IPHONE12_MAIN", "Phone Main (~1/1.76\")", SENSOR_PRESETS["IPHONE12_MAIN"][2]),
+            ("CUSTOM", "Custom...", "Manually set sensor width and height"),
+        ],
+        default="FULL_FRAME",
+        update=_refcam_on_preset_change,
+    )
+    refcam_sensor_width: FloatProperty(
+        name="Sensor Width (mm)",
+        default=SENSOR_PRESETS["FULL_FRAME"][0],
+        min=0.1,
+        soft_max=60.0,
+    )
+    refcam_sensor_height: FloatProperty(
+        name="Sensor Height (mm)",
+        default=SENSOR_PRESETS["FULL_FRAME"][1],
+        min=0.1,
+        soft_max=40.0,
+    )
+    refcam_override_fit: BoolProperty(
+        name="Override Sensor Fit",
+        description="If disabled, the sensor fit is chosen automatically based on image aspect ratio",
+        default=False,
+    )
+    refcam_sensor_fit: EnumProperty(
+        name="Sensor Fit",
+        items=(("HORIZONTAL", "Horizontal", ""), ("VERTICAL", "Vertical", "")),
+        default="HORIZONTAL",
+    )
+    refcam_use_equiv_35: BoolProperty(
+        name="Use 35mm-Equivalent Focal",
+        description="Calculate focal length from a 35mm equivalent value using diagonal crop factor",
+        default=True,
+        update=_refcam_enable_equiv,
+    )
+    refcam_equiv_35_mm: FloatProperty(
+        name="35mm-Equivalent (mm)",
+        default=50.0,
+        min=1.0,
+        soft_max=300.0,
+    )
+    refcam_use_fov_h: BoolProperty(
+        name="Use Horizontal FOV",
+        description="If enabled, compute the lens from the horizontal field of view",
+        default=False,
+        update=_refcam_enable_fov_h,
+    )
+    refcam_fov_h_deg: FloatProperty(
+        name="FOV Horizontal (°)",
+        default=60.0,
+        min=1.0,
+        max=179.0,
+    )
+    refcam_use_fov_v: BoolProperty(
+        name="Use Vertical FOV",
+        description="If enabled, compute the lens from the vertical field of view",
+        default=False,
+        update=_refcam_enable_fov_v,
+    )
+    refcam_fov_v_deg: FloatProperty(
+        name="FOV Vertical (°)",
+        default=45.0,
+        min=1.0,
+        max=179.0,
+    )
+    refcam_direct_lens_mm: FloatProperty(
+        name="Direct Lens (mm)",
+        description="Fallback focal length used when no computation option is enabled",
+        default=35.0,
+        min=1.0,
+        soft_max=300.0,
+    )
+    refcam_add_background: BoolProperty(
+        name="Show Reference in Camera View",
+        description="Display the reference image as a background image in the active camera",
         default=True,
     )
 

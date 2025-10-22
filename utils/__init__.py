@@ -16,6 +16,17 @@ from .objects import (
     object_is_visible,
 )
 from .render import apply_render_preset
+from .camera import (
+    SENSOR_PRESETS,
+    DIAGONAL_35MM,
+    ensure_active_scene_camera,
+    ensure_camera_background_image,
+    set_render_resolution_from_image,
+    pick_sensor_fit,
+    crop_factor_from_sensor,
+    lens_from_horizontal_fov,
+    lens_from_vertical_fov,
+)
 
 __all__ = [
     "gather_target_fcurves",
@@ -30,4 +41,13 @@ __all__ = [
     "object_flip",
     "object_is_visible",
     "apply_render_preset",
+    "SENSOR_PRESETS",
+    "DIAGONAL_35MM",
+    "ensure_active_scene_camera",
+    "ensure_camera_background_image",
+    "set_render_resolution_from_image",
+    "pick_sensor_fit",
+    "crop_factor_from_sensor",
+    "lens_from_horizontal_fov",
+    "lens_from_vertical_fov",
 ]

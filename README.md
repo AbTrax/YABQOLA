@@ -44,6 +44,10 @@ YABQOLA is a modular collection of animation utilities for Blender created by **
   - One-click Cycles and Eevee presets tuned for clay previews, draft stills, and final hero frames.
   - Keeps motion blur, sampling, and output formats in sync across render engines.
 
+- **Reference Camera Matcher**
+  - Syncs sensor size, focal length, and render resolution to match a reference image.
+  - Supports crop-factor conversion, horizontal/vertical FOV targets, and optional camera background overlays.
+
 ---
 
 ## Installation
@@ -119,6 +123,13 @@ Each feature lives in its own collapsible panel so you can focus on the tools yo
 
 - Pick from clay, draft, or final still presets tuned for both Cycles and Eevee.
 - Apply output, sampling, and motion blur overrides in one click via the sidebar or add-on preferences.
+
+### Reference Camera Matcher
+
+- Load a reference image to automatically align render resolution, sensor fit, and lens data.
+- Choose from common camera presets or enter custom sensor dimensions.
+- Match by 35mm-equivalent focal length or target horizontal/vertical FOV values.
+- Optionally display the reference as a camera background for immediate framing feedback.
 
 ## Release Notes
 

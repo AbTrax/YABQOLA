@@ -7,6 +7,7 @@ from bpy.types import Context, Panel
 
 from ..preferences import get_addon_preferences
 from ..properties import AnimationQOLSceneSettings
+from ..utils import SENSOR_PRESETS
 
 
 def _get_settings(context: Context) -> AnimationQOLSceneSettings | None:
@@ -162,6 +163,61 @@ def _draw_render_section(layout, settings: AnimationQOLSceneSettings):
     )
 
 
+def _format_image_label(image) -> str:
+    width, height = image.size
+    if width and height:
+        return f"{image.name} ({int(width)}x{int(height)})"
+    return image.name
+
+
+def _draw_reference_camera_section(layout, settings: AnimationQOLSceneSettings):
+    layout.label(text="Reference Camera Matcher", icon="CAMERA_DATA")
+    col = layout.column(align=True)
+    col.prop(settings, "refcam_image_path")
+    col.operator("animation_qol.refcam_load_image", icon="IMAGE_DATA")
+
+    if settings.refcam_image:
+        col.label(text=_format_image_label(settings.refcam_image), icon="FILE_IMAGE")
+
+    col.separator()
+    col.prop(settings, "refcam_sensor_preset")
+    if settings.refcam_sensor_preset == "CUSTOM":
+        row = col.row(align=True)
+        row.prop(settings, "refcam_sensor_width")
+        row.prop(settings, "refcam_sensor_height")
+    else:
+        sensor_width, sensor_height, _ = SENSOR_PRESETS[settings.refcam_sensor_preset]
+        col.label(text=f"{sensor_width:.2f} x {sensor_height:.2f} mm", icon="INFO")
+
+    col.prop(settings, "refcam_override_fit")
+    fit_column = col.column(align=True)
+    fit_column.enabled = settings.refcam_override_fit
+    fit_column.prop(settings, "refcam_sensor_fit")
+
+    col.separator()
+    col.prop(settings, "refcam_use_equiv_35")
+    equiv_column = col.column(align=True)
+    equiv_column.enabled = settings.refcam_use_equiv_35
+    equiv_column.prop(settings, "refcam_equiv_35_mm")
+
+    col.prop(settings, "refcam_use_fov_h")
+    fov_h_column = col.column(align=True)
+    fov_h_column.enabled = settings.refcam_use_fov_h
+    fov_h_column.prop(settings, "refcam_fov_h_deg")
+
+    col.prop(settings, "refcam_use_fov_v")
+    fov_v_column = col.column(align=True)
+    fov_v_column.enabled = settings.refcam_use_fov_v
+    fov_v_column.prop(settings, "refcam_fov_v_deg")
+
+    col.label(text="Or set directly:")
+    col.prop(settings, "refcam_direct_lens_mm")
+
+    col.separator()
+    col.prop(settings, "refcam_add_background")
+    col.operator("animation_qol.refcam_apply", icon="CAMERA_DATA", text="Match Camera")
+
+
 class ANIMATIONQOL_PT_base(Panel):
     bl_label = "YABQOLA"
     bl_region_type = "UI"
@@ -301,12 +357,42 @@ class ANIMATIONQOL_PT_view3d_render(Panel):
             layout.label(text="Render tools disabled in preferences.", icon="INFO")
 
 
+class ANIMATIONQOL_PT_view3d_reference_camera(Panel):
+    bl_label = "YABQOLA: Reference Camera"
+    bl_space_type = "VIEW_3D"
+    bl_region_type = "UI"
+    bl_category = "YABQOLA"
+    bl_options = {"DEFAULT_CLOSED"}
+
+    @classmethod
+    def poll(cls, context: Context) -> bool:
+        if _get_settings(context) is None:
+            return False
+        prefs = get_addon_preferences(context)
+        return _feature_enabled(prefs, "enable_reference_camera_tools")
+
+    def draw(self, context: Context):
+        layout = self.layout
+        settings = _get_settings(context)
+        prefs = get_addon_preferences(context)
+
+        if settings is None:
+            layout.label(text="Scene settings unavailable", icon="ERROR")
+            return
+
+        if _feature_enabled(prefs, "enable_reference_camera_tools"):
+            _draw_reference_camera_section(layout.box(), settings)
+        else:
+            layout.label(text="Reference Camera tools disabled in preferences.", icon="INFO")
+
+
 CLASSES = (
     ANIMATIONQOL_PT_graph_editor,
     ANIMATIONQOL_PT_dopesheet,
     ANIMATIONQOL_PT_view3d_quick_flip,
     ANIMATIONQOL_PT_view3d_cleanup,
     ANIMATIONQOL_PT_view3d_render,
+    ANIMATIONQOL_PT_view3d_reference_camera,
 )
 
 
