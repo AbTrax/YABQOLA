@@ -1,10 +1,12 @@
-"""Timing utilities for staggering animation across multiple objects."""
+"""Timing utilities for staggering animation across multiple objects or bones."""
 
 from __future__ import annotations
 
+from typing import Sequence
+
 import bpy
 from bpy.props import BoolProperty, IntProperty
-from bpy.types import Context, Operator
+from bpy.types import Context, Object, Operator, PoseBone
 
 from ..properties import AnimationQOLSceneSettings
 from ..utils import animation as anim_utils
@@ -71,36 +73,45 @@ class ANIMATIONQOL_OT_stagger_keyframes(Operator):
             self.report({"WARNING"}, "Stagger step is zero; adjust the step value to offset timing.")
             return {"CANCELLED"}
 
-        objects = list(getattr(context, "selected_objects", []))
-        if not objects:
-            active = getattr(context, "active_object", None)
-            if active:
-                objects.append(active)
+        pose_bones = list(getattr(context, "selected_pose_bones", []) or [])
+        active_pose_bone = getattr(context, "active_pose_bone", None)
+        if active_pose_bone and active_pose_bone not in pose_bones:
+            pose_bones.append(active_pose_bone)
 
-        if len(objects) <= 1:
-            self.report({"WARNING"}, "Select at least two objects to stagger their animation timing.")
-            return {"CANCELLED"}
+        use_bones = len(pose_bones) > 1
 
-        if reverse_order:
-            objects.reverse()
+        if use_bones and reverse_order:
+            pose_bones.reverse()
 
-        moved_total = 0
+        if use_bones:
+            moved_total = self._stagger_pose_bones(
+                pose_bones,
+                step=step,
+                selected_only=selected_only,
+            )
+        else:
+            objects = list(getattr(context, "selected_objects", []))
+            if not objects:
+                active_object = getattr(context, "active_object", None)
+                if active_object:
+                    objects.append(active_object)
 
-        for index, obj in enumerate(objects):
-            frame_delta = index * step
-            if frame_delta == 0:
-                continue
-
-            for fcurve in anim_utils.iter_fcurves_for_object(
-                obj, include_shape_keys=include_shape_keys
-            ):
-                if getattr(fcurve, "lock", False):
-                    continue
-                moved_total += anim_utils.shift_keyframes(
-                    fcurve,
-                    frame_delta,
-                    only_selected=selected_only,
+            if len(objects) <= 1:
+                self.report(
+                    {"WARNING"},
+                    "Select at least two objects or pose bones to stagger their animation timing.",
                 )
+                return {"CANCELLED"}
+
+            if reverse_order:
+                objects.reverse()
+
+            moved_total = self._stagger_objects(
+                objects,
+                step=step,
+                selected_only=selected_only,
+                include_shape_keys=include_shape_keys,
+            )
 
         if moved_total == 0:
             self.report(
@@ -111,6 +122,60 @@ class ANIMATIONQOL_OT_stagger_keyframes(Operator):
 
         self.report({"INFO"}, f"Staggered {moved_total} keyframes using a step of {step} frame(s).")
         return {"FINISHED"}
+
+    @staticmethod
+    def _stagger_objects(
+        objects: Sequence[Object],
+        *,
+        step: int,
+        selected_only: bool,
+        include_shape_keys: bool,
+    ) -> int:
+        moved_total = 0
+
+        for index, obj in enumerate(objects):
+            frame_delta = index * step
+            if frame_delta == 0:
+                continue
+
+            for fcurve in anim_utils.iter_fcurves_for_object(
+                obj,
+                include_shape_keys=include_shape_keys,
+            ):
+                if getattr(fcurve, "lock", False):
+                    continue
+                moved_total += anim_utils.shift_keyframes(
+                    fcurve,
+                    frame_delta,
+                    only_selected=selected_only,
+                )
+
+        return moved_total
+
+    @staticmethod
+    def _stagger_pose_bones(
+        pose_bones: Sequence[PoseBone],
+        *,
+        step: int,
+        selected_only: bool,
+    ) -> int:
+        moved_total = 0
+
+        for index, pose_bone in enumerate(pose_bones):
+            frame_delta = index * step
+            if frame_delta == 0:
+                continue
+
+            for fcurve in anim_utils.iter_fcurves_for_pose_bone(pose_bone):
+                if getattr(fcurve, "lock", False):
+                    continue
+                moved_total += anim_utils.shift_keyframes(
+                    fcurve,
+                    frame_delta,
+                    only_selected=selected_only,
+                )
+
+        return moved_total
 
 
 CLASSES = (ANIMATIONQOL_OT_stagger_keyframes,)

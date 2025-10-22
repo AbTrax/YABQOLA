@@ -5,11 +5,12 @@ from __future__ import annotations
 from typing import Iterable, List, Sequence
 
 import bpy
-from bpy.types import Context, FCurve, Object
+from bpy.types import Context, FCurve, Object, PoseBone
 
 __all__ = [
     "gather_target_fcurves",
     "iter_fcurves_for_object",
+    "iter_fcurves_for_pose_bone",
     "shift_keyframes",
     "sorted_range",
 ]
@@ -40,6 +41,43 @@ def iter_fcurves_for_object(obj: Object | None, *, include_shape_keys: bool = Tr
             if sk_data and sk_data.action:
                 for fcurve in sk_data.action.fcurves:
                     yield fcurve
+
+
+def _pose_bone_path_prefix(pose_bone: PoseBone) -> str:
+    """Return the data path prefix for a pose bone."""
+
+    try:
+        base_path = pose_bone.path_from_id("")
+    except (AttributeError, TypeError, ValueError):
+        base_path = ""
+
+    if base_path:
+        return base_path
+
+    # Fallback when Blender cannot provide a path (unexpected identifiers).
+    name = bpy.utils.escape_identifier(pose_bone.name) if hasattr(bpy.utils, "escape_identifier") else pose_bone.name
+    return f'pose.bones["{name}"]'
+
+
+def iter_fcurves_for_pose_bone(pose_bone: PoseBone | None) -> Iterable[FCurve]:
+    """Yield fcurves associated with a specific pose bone."""
+
+    if pose_bone is None:
+        return []
+
+    armature_obj = pose_bone.id_data
+    if armature_obj is None:
+        return []
+
+    anim_data = getattr(armature_obj, "animation_data", None)
+    action = getattr(anim_data, "action", None)
+    if action is None:
+        return []
+
+    prefix = _pose_bone_path_prefix(pose_bone)
+    for fcurve in action.fcurves:
+        if fcurve.data_path.startswith(prefix):
+            yield fcurve
 
 
 def gather_target_fcurves(

@@ -29,7 +29,7 @@ YABQOLA is a modular collection of animation utilities for Blender created by **
   - Cascade offsets by selection order or alphabetical channel names.
 
 - **Stagger Timing**
-  - Cascading offsets across multiple objects to create natural overlap.
+  - Cascading offsets across multiple objects or pose bones to create natural overlap.
   - Works with shape keys and can run in reverse selection order.
 
 - **Quick Flip**
@@ -99,7 +99,7 @@ Each feature lives in its own collapsible panel so you can focus on the tools yo
 
 ### Stagger Timing
 
-- Define the **Step** size to specify the frame delta between successive objects.
+- Define the **Step** size to specify the frame delta between successive objects or pose bones.
 - Enable **Reverse Order** to invert the staggering direction.
 - Include shape keys when animating facial rigs or morph targets.
 - Use **Stagger** to distribute the offsets automatically.
