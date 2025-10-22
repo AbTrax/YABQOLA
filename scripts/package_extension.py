@@ -1,9 +1,8 @@
-"""Utility to package the YABQOLA Blender add-on into a distributable zip."""
+"""Package the YABQOLA Blender extension into a distributable zip archive."""
 
 from __future__ import annotations
 
 import argparse
-import ast
 import shutil
 import sys
 from pathlib import Path
@@ -11,24 +10,30 @@ from typing import Iterable
 from zipfile import ZIP_DEFLATED, ZipFile
 
 ROOT = Path(__file__).resolve().parent.parent
-ADDON_NAME = ROOT.name
-INIT_FILE = ROOT / "__init__.py"
+MANIFEST_FILE = ROOT / "blender_manifest.toml"
 DEFAULT_DIST_DIR = ROOT / "dist"
 EXCLUDED_DIRS = {".git", ".github", "dist", "scripts", "__pycache__"}
 EXCLUDED_FILES = {".gitignore"}
 
+try:
+    import tomllib  # Python 3.11+
+except ModuleNotFoundError:  # pragma: no cover - fallback for Python <3.11
+    import tomli as tomllib  # type: ignore[no-redef]
 
-def _parse_bl_info(init_path: Path) -> dict:
-    if not init_path.exists():
-        raise FileNotFoundError(f"Unable to locate {init_path}")
 
-    tree = ast.parse(init_path.read_text(encoding="utf-8"))
-    for node in tree.body:
-        if isinstance(node, ast.Assign):
-            for target in node.targets:
-                if isinstance(target, ast.Name) and target.id == "bl_info":
-                    return ast.literal_eval(node.value)
-    raise ValueError("Could not find bl_info dictionary in __init__.py")
+def _parse_manifest(manifest_path: Path) -> dict:
+    if not manifest_path.exists():
+        raise FileNotFoundError(f"Unable to locate {manifest_path}")
+
+    with manifest_path.open("rb") as handle:
+        manifest = tomllib.load(handle)
+
+    missing = {key for key in ("id", "version") if key not in manifest}
+    if missing:
+        missing_list = ", ".join(sorted(missing))
+        raise KeyError(f"Manifest missing required fields: {missing_list}")
+
+    return manifest
 
 
 def _discover_files(base: Path) -> Iterable[Path]:
@@ -45,7 +50,7 @@ def _discover_files(base: Path) -> Iterable[Path]:
             yield from _discover_files(path)
 
 
-def build_archive(output_dir: Path, zip_name: str) -> Path:
+def build_archive(output_dir: Path, zip_name: str, extension_id: str) -> Path:
     files = list(_discover_files(ROOT))
     if not files:
         raise RuntimeError("No files discovered to package.")
@@ -55,7 +60,7 @@ def build_archive(output_dir: Path, zip_name: str) -> Path:
     if archive_path.exists():
         archive_path.unlink()
 
-    root_folder = ADDON_NAME
+    root_folder = extension_id
 
     with ZipFile(archive_path, "w", compression=ZIP_DEFLATED) as zf:
         for file_path in files:
@@ -67,7 +72,7 @@ def build_archive(output_dir: Path, zip_name: str) -> Path:
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description="Package the YABQOLA Blender add-on.")
+    parser = argparse.ArgumentParser(description="Package the YABQOLA Blender extension.")
     parser.add_argument(
         "--dist",
         dest="dist",
@@ -89,21 +94,21 @@ def main(argv: list[str] | None = None) -> int:
 
     args = parser.parse_args(argv)
 
-    bl_info = _parse_bl_info(INIT_FILE)
-    version_tuple = bl_info.get("version")
-    if not version_tuple:
-        raise KeyError("bl_info missing 'version' entry")
-    version = ".".join(str(part) for part in version_tuple)
+    manifest = _parse_manifest(MANIFEST_FILE)
+    version_raw = manifest.get("version")
+    if not isinstance(version_raw, str) or not version_raw:
+        raise TypeError("Manifest 'version' must be a non-empty string")
+    extension_id = manifest["id"]
 
     if args.force and args.dist.exists():
         shutil.rmtree(args.dist)
 
-    zip_base = f"{ADDON_NAME}-{version}"
+    zip_base = f"{extension_id}-{version_raw}"
     if args.suffix:
         zip_base = f"{zip_base}-{args.suffix}"
     zip_filename = f"{zip_base}.zip"
 
-    archive_path = build_archive(args.dist, zip_filename)
+    archive_path = build_archive(args.dist, zip_filename, extension_id)
     print(f"Created archive: {archive_path}")
 
     return 0

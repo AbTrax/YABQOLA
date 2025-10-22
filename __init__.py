@@ -1,13 +1,12 @@
-"""
-YABQOLA - Yet Another Blender Quality of Life Add-on
-"""
+"""YABQOLA - Yet Another Blender Quality of Life Extension."""
 
+# Legacy metadata kept so Blender <4.2 can still treat the package as an add-on.
 bl_info = {
-    "name": "YABQOLA: Yet Another Blender Quality of Life Add-on",
+    "name": "YABQOLA: Yet Another Blender Quality of Life Extension",
     "description": "Modular animation QoL tools: noise randomizer, timing/stagger, quick flip, and scene cleanup.",
     "author": "Xnom3d",
     "version": (1, 2, 1),
-    "blender": (3, 0, 0),
+    "blender": (4, 2, 0),
     "location": "Graph/Dope Sheet & 3D View > Sidebar",
     "warning": "",
     "doc_url": "",

@@ -1,0 +1,14 @@
+schema_version = "1.0.0"
+
+id = "xnom3d_yabqola"
+version = "1.2.1"
+name = "YABQOLA"
+tagline = "Modular animation quality of life tools"
+maintainer = "Xnom3d"
+type = "add-on"
+
+blender_version_min = "4.2.0"
+
+license = [
+  "SPDX:GPL-3.0-or-later",
+]

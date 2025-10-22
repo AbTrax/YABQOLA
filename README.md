@@ -1,10 +1,18 @@
-# YABQOLA — Yet Another Blender Quality of Life Add-on
+# YABQOLA - Yet Another Blender Quality of Life Extension
 
-**Version:** 1.2.1 · **Blender Compatibility:** 3.0+
+**Version:** 1.2.1 - **Blender Compatibility:** 4.2+
 
 YABQOLA is a modular collection of animation utilities for Blender created by **Xnom3d**. It focuses on speeding up common cleanup and timing tasks so you can stay in the flow while animating. Install it once and access every tool from the **Graph Editor**, **Dope Sheet**, or **3D Viewport** sidebars under the **YABQOLA** tab.
 
-> 💡 YABQOLA is actively evolving. We're committed to shipping new tools and refinements based on community suggestions—share your ideas and help guide the roadmap!
+> Note: YABQOLA is actively evolving. We're committed to shipping new tools and refinements based on community suggestions; share your ideas and help guide the roadmap!
+
+## Why Move to the Extensions Platform
+
+- Blender 4.2 introduces the extensions framework for cleaner, future-proof distribution.
+- Extension metadata lives in `blender_manifest.toml`, replacing `bl_info` for packaging.
+- Dependencies can be bundled as Python wheels to ensure offline installs.
+- Extensions must declare permissions up front so users know what data is accessed.
+- Converting is mostly a packaging update, so your existing Python modules still work.
 
 ---
 
@@ -40,19 +48,22 @@ YABQOLA is a modular collection of animation utilities for Blender created by **
 
 ## Installation
 
-### From a Release Zip
+### Blender 4.2+ (Extensions)
 
-1. Download the latest `.zip` from the Releases page (or package this repository as a zip).
-2. In Blender, open **Edit ▸ Preferences ▸ Add-ons**.
-3. Click **Install**, pick the downloaded zip, enable **YABQOLA: Yet Another Blender Quality of Life Add-on**.
+1. Download the latest packaged `.zip` from the Releases page (or run `python scripts/package_addon.py --force` to build one).
+2. In Blender, open **Edit > Preferences > Extensions**.
+3. Click **Install from Disk**, pick the downloaded zip, and enable **YABQOLA**.
+4. Restart Blender if prompted so the extension registers its keymaps.
 
-### From Source (Developer Setup)
+### Blender 3.x Legacy Add-on (Optional)
 
-1. Clone the repository into your Blender add-ons folder:
+Older Blender versions without the Extensions browser can still install YABQOLA as a traditional add-on:
+
+1. Clone or copy this repository into your Blender add-ons folder:
    - Windows: `%APPDATA%/Blender Foundation/Blender/<version>/scripts/addons`
    - macOS: `~/Library/Application Support/Blender/<version>/scripts/addons`
    - Linux: `~/.config/blender/<version>/scripts/addons`
-2. Restart Blender and enable the add-on from **Preferences ▸ Add-ons**.
+2. Restart Blender and enable the add-on from **Edit > Preferences > Add-ons** by searching for "YABQOLA".
 
 ---
 
@@ -60,7 +71,7 @@ YABQOLA is a modular collection of animation utilities for Blender created by **
 
 1. After enabling the add-on, open the **Graph Editor**, **Dope Sheet**, or **3D Viewport**.
 2. Press `N` to reveal the sidebar and look for the **YABQOLA** tab.
-3. Configure defaults in the sidebar panels—the settings persist per scene.
+3. Configure defaults in the sidebar panels; the settings persist per scene.
 
 Each feature lives in its own collapsible panel so you can focus on the tools you use most. Hover over any control to see contextual tooltips.
 
@@ -123,7 +134,7 @@ YABQOLA will keep growing with your input. We're prioritizing:
 - Quality-of-life improvements surfaced by everyday usage.
 - Documentation and tutorial content.
 
-Have a suggestion or workflow pain point? Open an issue or start a discussion—your ideas directly shape upcoming releases.
+Have a suggestion or workflow pain point? Open an issue or start a discussion-your ideas directly shape upcoming releases.
 
 ---
 
@@ -140,11 +151,11 @@ Bug reports, UX feedback, and documentation updates are equally welcome.
 
 ## Automated Releases
 
-This project includes a packaging helper and GitHub Actions workflow to publish release zips automatically.
+This project includes a packaging helper and GitHub Actions workflow to publish extension zips automatically.
 
 ### Local packaging
 
-- Run `python scripts/package_addon.py --force` to create `dist/YABQOLA-<version>.zip` using the `bl_info` version.
+- Run `python scripts/package_addon.py --force` to create `dist/xnom3d_yabqola-<version>.zip` using the manifest version.
 - Use `--suffix` to append build metadata (for example `--suffix nightly`).
 
 ### GitHub Actions
@@ -165,7 +176,7 @@ Artifacts from any run are uploaded as workflow artifacts so they can be downloa
 
 ## License
 
-No explicit license has been provided yet; all rights reserved by the author. If you plan to distribute modified versions, please coordinate with the maintainer.
+YABQOLA is distributed under the GPL-3.0-or-later license. Refer to `blender_manifest.toml` for authoritative metadata when submitting to the Extensions platform.
 
 ---
 
